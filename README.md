@@ -22,3 +22,4 @@ StockVis is a web application designed to provide users with insights into the s
 1. Clone the repository:  
    ```bash
    git clone https://github.com/your-repo/stockvis.git
+<img width="707" alt="Screenshot 2024-11-14 at 4 43 06 PM" src="https://github.com/user-attachments/assets/403bd64d-94dd-4a3b-b7a6-0c8bb2434911">
