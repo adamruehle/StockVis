@@ -334,11 +334,13 @@ def extract_all_balance_sheets_for_tickers(sheet_type):
     existing_tickers.add(ticker)
     # Save DataFrame to CSV after each ticker
     df.to_csv(csv_file, index=False)
+    time.sleep(5)
   driver.quit()
 
 if __name__ == "__main__":
   # session = start_session()
   # stock_tickers = get_all_stocks_from_file()
   # all_stock_data = extract_stock_prices(session, stock_tickers)
-  # extract_all_company_data_for_tickers()
   extract_all_balance_sheets_for_tickers(sheet_type='income')
+  time.sleep(300)
+  extract_all_company_data_for_tickers()
