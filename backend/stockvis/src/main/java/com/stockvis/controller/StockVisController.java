@@ -20,8 +20,8 @@ public class StockVisController {
      *
      * @return A sample response string (replace with actual implementation).
      */
-    @GetMapping(value = "/getStocks")
-    public ResponseEntity<String> getStocks() {
+    @GetMapping(value = "/hello")
+    public ResponseEntity<String> hello() {
         // Replace with actual logic to fetch and return stocks
         return ResponseEntity.ok("Hello World!");
     }
