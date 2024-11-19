@@ -1,20 +1,20 @@
 package com.stockvis.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import java.time.LocalDate;
 
 @Entity
+@Table(name = "economicData")
 public class EconomicData {
-
     @Id
-    private Long companyId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long econId;
 
+    private LocalDate date;
+    private Double interestRate;
+    private Double inflationRate;
+    private Double unemploymentRate;
+    private Double gdp;
 
-    public void setCompanyId(Long companyId) {
-        this.companyId = companyId;
-    }
-
-    public Long getCompanyId() {
-        return companyId;
-    }
+    // Getters and Setters
 }
