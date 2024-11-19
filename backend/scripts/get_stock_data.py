@@ -27,7 +27,7 @@ def start_session():
 
 def start_driver():
   options = uc.ChromeOptions()
-  options.add_argument("--headless")  # Remove this if you want to see the browser for testing
+  # options.add_argument("--headless")  # Remove this if you want to see the browser for testing
   options.add_argument("--disable-gpu")
   options.add_argument("--no-sandbox")
   options.add_argument("--disable-blink-features=AutomationControlled")
@@ -193,6 +193,7 @@ def extract_all_company_data_for_tickers():
   for ticker in stock_tickers:
     url = f"https://finance.yahoo.com/quote/{ticker}/profile/"
     driver.get(url)
+    # If a 404 error occurs, skip to the next ticker
     # Get the page source
     page_source = driver.page_source
     soup = BeautifulSoup(page_source, 'html.parser')
@@ -275,6 +276,7 @@ def extract_all_balance_sheets_for_tickers(sheet_type):
       print(f"Ticker {ticker} already processed. Skipping.")
       continue
     url = f"https://finance.yahoo.com/quote/{ticker}/{url_sheet_type}"
+    print(url)
     print(f"Processing ticker: {ticker}")
     driver.get(url)
     # Wait for the page to load
@@ -341,6 +343,6 @@ if __name__ == "__main__":
   # session = start_session()
   # stock_tickers = get_all_stocks_from_file()
   # all_stock_data = extract_stock_prices(session, stock_tickers)
-  extract_all_balance_sheets_for_tickers(sheet_type='income')
-  time.sleep(300)
+  # extract_all_balance_sheets_for_tickers(sheet_type='balance')
+  # time.sleep(300)
   extract_all_company_data_for_tickers()
