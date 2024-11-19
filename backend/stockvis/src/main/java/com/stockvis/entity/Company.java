@@ -1,66 +1,29 @@
 package com.stockvis.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-
-import java.sql.Date;
+import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
+@Table(name = "company")
 public class Company {
-    @Id
-    private Long companyID;
 
+    @Id
     private String name;
     private String sector;
     private String industry;
-    private String headQuarters;
-    private Date foundedYear;
+    private String headquarters;
+    private Integer foundedYear;
 
-    public String getName() {
-        return name;
-    }
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
+    private List<Stock> stocks;
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
+    private List<CompanyFinancial> companyFinancials;
 
-    public String getSector() {
-        return sector;
-    }
+    @OneToMany(mappedBy = "companyId", cascade = CascadeType.ALL)
+    private List<BalanceSheet> balanceSheets;
 
-    public void setSector(String sector) {
-        this.sector = sector;
-    }
-
-    public String getIndustry() {
-        return industry;
-    }
-
-    public void setIndustry(String industry) {
-        this.industry = industry;
-    }
-
-    public String getHeadQuarters() {
-        return headQuarters;
-    }
-
-    public void setHeadQuarters(String headQuarters) {
-        this.headQuarters = headQuarters;
-    }
-
-    public Date getFoundedYear() {
-        return foundedYear;
-    }
-
-    public void setFoundedYear(Date foundedYear) {
-        this.foundedYear = foundedYear;
-    }
-
-    public void setCompanyID(Long companyID) {
-        this.companyID = companyID;
-    }
-
-    public Long getCompanyID() {
-        return companyID;
-    }
+    @OneToMany(mappedBy = "companyId", cascade = CascadeType.ALL)
+    private List<IncomeStatement> incomeStatements;
+    // Getters and Setters
 }
