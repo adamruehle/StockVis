@@ -3,17 +3,21 @@ package com.stockvis.entity;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Entity
+@IdClass(BalanceSheetId.class)
 public class IncomeStatement implements Serializable {
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "company_id", referencedColumnName = "companyId", nullable = false)
-    private Company companyId;
+    @JoinColumn(name = "company_name", referencedColumnName = "name", nullable = false)
+    private Company company;
 
-    @Column(length = 20, nullable = false)
-    private String date;
+    @Id
+    @Column(name = "date")
+    @Temporal(TemporalType.DATE)
+    private Date date;
 
     private BigDecimal totalRevenue;
     private BigDecimal costOfRevenue;
