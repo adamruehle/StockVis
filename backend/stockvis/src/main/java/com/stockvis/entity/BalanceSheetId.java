@@ -5,24 +5,26 @@ import java.util.Date;
 import java.util.Objects;
 
 public class BalanceSheetId implements Serializable {
-    private String companyId;
-    private Date date;
+
+    private Company company;  // The Company object as part of the composite key
+    private Date date;        // The Date as part of the composite key
 
     // Default constructor
     public BalanceSheetId() {}
 
-    public BalanceSheetId(String companyId, Date date) {
-        this.companyId = companyId;
+    // Constructor
+    public BalanceSheetId(Company company, Date date) {
+        this.company = company;
         this.date = date;
     }
 
     // Getters and Setters
-    public String getCompanyId() {
-        return companyId;
+    public Company getCompany() {
+        return company;
     }
 
-    public void setCompanyId(String companyId) {
-        this.companyId = companyId;
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
     public Date getDate() {
@@ -33,17 +35,17 @@ public class BalanceSheetId implements Serializable {
         this.date = date;
     }
 
-    // equals() and hashCode()
+    // equals() and hashCode() to compare BalanceSheetId instances based on company and date
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BalanceSheetId that = (BalanceSheetId) o;
-        return Objects.equals(companyId, that.companyId) && Objects.equals(date, that.date);
+        return Objects.equals(company, that.company) && Objects.equals(date, that.date);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(companyId, date);
+        return Objects.hash(company, date);
     }
 }

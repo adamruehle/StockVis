@@ -6,16 +6,19 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "companyFinancial")
+@IdClass(CompanyFinancialId.class)
 public class CompanyFinancial {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long financialId;
+    private String name;
+
+    @Id
+    private LocalDate date;
 
     @ManyToOne
-    @JoinColumn(name = "companyId", nullable = false)
+    @JoinColumn(name = "name", nullable = false)
     private Company company;
 
-    private LocalDate date;
     private Double earningsPerShare;
     private Double liabilities;
     private Double assets;
