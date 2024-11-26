@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime, timezone, timedelta
-from yahoo_fin import stock_info as si
+# from yahoo_fin import stock_info as si
 import json
 import csv
 from bs4 import BeautifulSoup
@@ -13,6 +13,9 @@ import os
 import time
 import pandas as pd
 import re
+# import yahoo_finance as yf
+import yfinance as yf
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def start_session():
   session = requests.Session()
@@ -364,10 +367,60 @@ def extract_all_balance_sheets_for_tickers(sheet_type):
     df.to_csv(csv_file, index=False)
   driver.quit()
 
+def get_market_cap(tickers):
+  """
+  Fetches the market cap for the given list of tickers.
+  Args:
+    tickers (list): List of stock ticker symbols.
+  Returns:
+    dict: A dictionary mapping ticker symbols to their market cap.
+  """
+  # Join tickers into a single string separated by spaces
+  tickers_str = " ".join(tickers)
+  # Fetch data for multiple tickers
+  data = yf.Tickers(tickers_str)
+  # Initialize a dictionary to store results
+  market_caps = {}
+  # Check if the file exists
+  # Need to get which stocks have already been processed
+  header_exists = False
+  if os.path.exists('scripts/market_caps.csv'):
+    with open('scripts/market_caps.csv', 'r', newline='', encoding='utf-8') as file:
+      reader = csv.reader(file)
+      # Make sure there is a header
+      header_exists = any(reader)
+      for row in reader:
+        if row:
+          market_caps[row[0]] = row[1]
+  # Remove the tickers that have already been processed
+  tickers = [ticker for ticker in tickers if ticker not in market_caps]
+  # Iterate through each ticker
+  with open('scripts/market_caps.csv', 'a', newline='', encoding='utf-8') as f:
+    writer = csv.writer(f)
+    if not header_exists:
+      writer.writerow(['Ticker', 'Market Cap'])
+      header_exists = True
+  for ticker in tickers:
+    try:
+      # Access the specific ticker's information
+      info = data.tickers[ticker].info
+      # Extract market cap
+      market_cap = info.get("marketCap", "N/A")
+      print(f"Ticker: {ticker}, Market Cap: {market_cap}")
+      market_caps[ticker] = market_cap
+    except Exception as e:
+      market_caps[ticker] = f"Error: {str(e)}"
+    with open('scripts/market_caps.csv', 'a', newline='', encoding='utf-8') as f:
+      writer = csv.writer(f)
+      # Save each ticker with it's market cap in a csv file
+      writer.writerow([ticker, market_caps[ticker]])
+  return market_caps
+
 if __name__ == "__main__":
-  session = start_session()
+  # session = start_session()
   stock_tickers = get_all_stocks_from_file()
-  print(stock_tickers)
-  all_stock_data = extract_stock_prices(session, stock_tickers)
+  # print(stock_tickers)
+  # all_stock_data = extract_stock_prices(session, stock_tickers)
   # extract_all_company_data_for_tickers()
   # extract_all_balance_sheets_for_tickers(sheet_type='income')
+  market_caps = get_market_cap(stock_tickers)
