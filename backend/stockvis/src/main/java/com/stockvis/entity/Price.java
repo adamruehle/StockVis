@@ -2,6 +2,7 @@ package com.stockvis.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "price")
@@ -14,24 +15,16 @@ public class Price {
 
     @Id
     @Column(name = "date")
-    private LocalDate date;
+    private LocalDateTime date;
 
     @ManyToOne
     @JoinColumn(name = "ticker", referencedColumnName = "ticker", insertable = false, updatable = false)
     private Stock stock;
 
-    @Column(name = "open_price")
-    private Double openPrice;
+    @Column(name = "current_price")
+    private Double currentPrice;
 
-    @Column(name = "close_price")
-    private Double closePrice;
-
-    @Column(name = "low_price")
-    private Double lowPrice;
-
-    @Column(name = "high_price")
-    private Double highPrice;
-
+    private Double marketCap;
     private Long volume;
 
     // Getters and Setters
@@ -43,11 +36,11 @@ public class Price {
         this.ticker = ticker;
     }
 
-    public LocalDate getDate() {
+    public LocalDateTime getDate() {
         return date;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(LocalDateTime date) {
         this.date = date;
     }
 
@@ -59,36 +52,12 @@ public class Price {
         this.stock = stock;
     }
 
-    public Double getOpenPrice() {
-        return openPrice;
+    public void setCurrentPrice(Double currentPrice) {
+        this.currentPrice = currentPrice;
     }
 
-    public void setOpenPrice(Double openPrice) {
-        this.openPrice = openPrice;
-    }
-
-    public Double getClosePrice() {
-        return closePrice;
-    }
-
-    public void setClosePrice(Double closePrice) {
-        this.closePrice = closePrice;
-    }
-
-    public Double getLowPrice() {
-        return lowPrice;
-    }
-
-    public void setLowPrice(Double lowPrice) {
-        this.lowPrice = lowPrice;
-    }
-
-    public Double getHighPrice() {
-        return highPrice;
-    }
-
-    public void setHighPrice(Double highPrice) {
-        this.highPrice = highPrice;
+    public Double getCurrentPrice() {
+        return currentPrice;
     }
 
     public Long getVolume() {

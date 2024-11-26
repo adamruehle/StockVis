@@ -17,7 +17,7 @@ export default function Home() {
                 <Link href="/" className="hover:text-white">Home</Link>
               </li>
               <li>
-                <Link href="/stockdata" className="hover:text-white">Stock Data</Link>
+                <Link href="/stocks" className="hover:text-white">Stock Data</Link>
               </li>
               <li>
                 <Link href="/insights" className="hover:text-white">Filter & Insights</Link>
@@ -32,7 +32,7 @@ export default function Home() {
           Discover powerful insights and data visualization tools designed to help you make informed stock market decisions. With StockVis, navigate through an intuitive platform tailored for both beginners and experts.
         </p>
         <div className="flex justify-center">
-          <Link href="/stockdata">
+          <Link href="/stocks">
             <button className="bg-white text-black px-6 py-3 rounded-full font-semibold hover:bg-accent transition duration-300">
               Explore Stock Data
             </button>
@@ -48,7 +48,7 @@ export default function Home() {
                 <Link href="/" className="hover:text-gray-300">Home</Link>
               </li>
               <li className="mb-2">
-                <Link href="/stockdata" className="hover:text-gray-300">Stock Data</Link>
+                <Link href="/stocks" className="hover:text-gray-300">Stock Data</Link>
               </li>
               <li className="mb-2">
                 <Link href="/insights" className="hover:text-gray-300">Filter & Insights</Link>

@@ -1,5 +1,6 @@
 import requests
 from datetime import datetime, timezone, timedelta
+from yahoo_fin import stock_info as si
 import json
 import csv
 from bs4 import BeautifulSoup
@@ -27,7 +28,7 @@ def start_session():
 
 def start_driver():
   options = uc.ChromeOptions()
-  # options.add_argument("--headless")  # Remove this if you want to see the browser for testing
+  options.add_argument("--headless")  # Remove this if you want to see the browser for testing
   options.add_argument("--disable-gpu")
   options.add_argument("--no-sandbox")
   options.add_argument("--disable-blink-features=AutomationControlled")
@@ -70,7 +71,7 @@ def get_response(session, url):
     return None
 
 def get_all_stocks_from_file():
-  with open('all_stocks.csv', 'r') as file:
+  with open('scripts/all_stocks.csv', 'r') as file:
     reader = csv.reader(file)
     header = next(reader)
     stock_tickers = [row[0] for row in reader]
@@ -121,35 +122,62 @@ def save_stock_prices(ticker_prices, filename='ticker_prices.csv'):
     for ticker, price in ticker_prices.items():
       writer.writerow([ticker, price])
 
-def extract_stock_prices(session, stock_tickers, range_param='5y', interval='1d', chunk_size=20):
-  """
-  Extract stock data for the given tickers over the specified date range and interval.
+def extract_stock_prices(session, stock_tickers, range_param='1d', interval='1d', chunk_size=20):
+    """
+    Extract stock data for the given tickers over the specified date range and interval.
 
-  Parameters:
-  - session: The requests session to use for API calls.
-  - stock_tickers: A list of stock ticker symbols to retrieve data for.
-  - range_param: The range parameter for the API call (e.g., '1d', '5d', '1mo', '5y', etc.).
-  - interval: The interval parameter for the API call (e.g., '1d', '1wk', '1mo').
-  - chunk_size: The number of tickers to process per API call.
+    Parameters:
+    - session: The requests session to use for API calls.
+    - stock_tickers: A list of stock ticker symbols to retrieve data for.
+    - range_param: The range parameter for the API call (e.g., '1d', '5d', '1mo', '5y', etc.).
+    - interval: The interval parameter for the API call (e.g., '1d', '1wk', '1mo').
+    - chunk_size: The number of tickers to process per API call.
 
-  Returns:
-  - all_stock_data: A list containing the extracted data for all tickers.
-  """
-  all_stock_data = []
+    Returns:
+    - all_stock_data: A list containing the extracted data for all tickers.
+    """
+    all_stock_data = []
 
-  # Process tickers in chunks
-  split_stock_tickers_list = [
-    stock_tickers[i:i + chunk_size] for i in range(0, len(stock_tickers), chunk_size)
-  ]
+    # Prepare the output CSV file
+    output_file = "stockvis/scripts/stock_prices.csv"
+    with open(output_file, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Ticker', 'Datetime', 'Price'])  # Write the header
 
-  for tickers in split_stock_tickers_list:
-    # print(f"Processing tickers: {tickers}")
-    url = generate_data_url(tickers, range_param, interval)
-    data = get_response(session, url)
-    extracted_data = extract_data(data)
-    all_stock_data.extend(extracted_data)
-  print(f"Total stocks retrieved: {len(all_stock_data)}")
-  return all_stock_data  # Optionally, save the data here
+        # Process tickers in chunks
+        split_stock_tickers_list = [
+            stock_tickers[i:i + chunk_size] for i in range(0, len(stock_tickers), chunk_size)
+        ]
+
+        for tickers in split_stock_tickers_list:
+            # Generate API URL
+            url = generate_data_url(tickers, range_param, interval)
+            data = get_response(session, url)
+            extracted_data = []
+
+            # Parse the API response
+            if data and 'spark' in data and 'result' in data['spark']:
+                for stock in data['spark']['result']:
+                    ticker = stock.get('symbol', 'Unknown')
+                    responses = stock.get('response', [])
+                    for resp in responses:
+                        timestamps = resp.get('timestamp', [])
+                        quotes = resp.get('indicators', {}).get('quote', [{}])[0].get('close', [])
+
+                        # Extract and format data
+                        for ts, price in zip(timestamps, quotes):
+                            # Convert timestamp to datetime
+                            date_time = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+                            extracted_data.append([ticker, date_time, price])
+
+            # Append to all_stock_data and write to CSV
+            all_stock_data.extend(extracted_data)
+            writer.writerows(extracted_data)
+
+    print(f"Data written to {output_file}")
+    print(f"Total stocks retrieved: {len(all_stock_data)}")
+
+    return all_stock_data
 
 def extract_all_company_data_for_tickers():
   driver = start_driver()
@@ -193,7 +221,6 @@ def extract_all_company_data_for_tickers():
   for ticker in stock_tickers:
     url = f"https://finance.yahoo.com/quote/{ticker}/profile/"
     driver.get(url)
-    # If a 404 error occurs, skip to the next ticker
     # Get the page source
     page_source = driver.page_source
     soup = BeautifulSoup(page_source, 'html.parser')
@@ -276,7 +303,6 @@ def extract_all_balance_sheets_for_tickers(sheet_type):
       print(f"Ticker {ticker} already processed. Skipping.")
       continue
     url = f"https://finance.yahoo.com/quote/{ticker}/{url_sheet_type}"
-    print(url)
     print(f"Processing ticker: {ticker}")
     driver.get(url)
     # Wait for the page to load
@@ -336,13 +362,12 @@ def extract_all_balance_sheets_for_tickers(sheet_type):
     existing_tickers.add(ticker)
     # Save DataFrame to CSV after each ticker
     df.to_csv(csv_file, index=False)
-    time.sleep(5)
   driver.quit()
 
 if __name__ == "__main__":
-  # session = start_session()
-  # stock_tickers = get_all_stocks_from_file()
-  # all_stock_data = extract_stock_prices(session, stock_tickers)
-  # extract_all_balance_sheets_for_tickers(sheet_type='balance')
-  # time.sleep(300)
-  extract_all_company_data_for_tickers()
+  session = start_session()
+  stock_tickers = get_all_stocks_from_file()
+  print(stock_tickers)
+  all_stock_data = extract_stock_prices(session, stock_tickers)
+  # extract_all_company_data_for_tickers()
+  # extract_all_balance_sheets_for_tickers(sheet_type='income')
