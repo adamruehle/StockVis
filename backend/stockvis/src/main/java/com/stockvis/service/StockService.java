@@ -2,6 +2,8 @@ package com.stockvis.service;
 
 import com.stockvis.entity.PriceId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import com.stockvis.entity.Company;
 import com.stockvis.entity.Price;
@@ -70,10 +72,6 @@ public class StockService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public List<Stock> getTopStocks(int limit) {
-        return stockRepository.findByTicker("AAPL");
     }
 
     public void populatePrices() {
