@@ -67,4 +67,8 @@ public class Price {
     public void setVolume(Long volume) {
         this.volume = volume;
     }
+
+    public void setMarketCap(Double marketCap) {
+        this.marketCap = marketCap;
+    }
 }

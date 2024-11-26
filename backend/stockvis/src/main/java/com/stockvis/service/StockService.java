@@ -5,20 +5,32 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stockvis.entity.Company;
 import com.stockvis.entity.Price;
 import com.stockvis.entity.Stock;
 import com.stockvis.repository.CompanyRepository;
 import com.stockvis.repository.PriceRepository;
 import com.stockvis.repository.StockRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+
+import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 @Service
 public class StockService {
@@ -74,44 +86,74 @@ public class StockService {
         }
     }
 
-    public void populatePrices() {
+    public void populatePrices(List<String> tickers) {
         try {
-//            // Call Python script to retrieve stocks
-//            ProcessBuilder processBuilder = new ProcessBuilder("python3", "scripts/get_stock_data.py");
-//            Process process = processBuilder.start();
-//            process.waitFor(); // Wait for the script to finish
+            // Prepare the command to call the Python script with tickers as arguments
+            List<String> command = new ArrayList<>();
+            command.add("python3");
+            command.add("scripts/get_stock_prices.py");
+            command.addAll(tickers);
 
-            // Now process the generated CSV
-            String filePath = "stockvis/scripts/stock_prices.csv";
-            BufferedReader reader = new BufferedReader(new FileReader(filePath));
-            reader.readLine(); // Skip the header
+            // Call Python script to retrieve stock prices
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            Process process = processBuilder.start();
+
+            // Read JSON data from Python script's stdout
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder output = new StringBuilder();
             String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line);
+            }
+            process.waitFor(); // Wait for the script to finish
+
+            // Parse JSON data
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<Map<String, Object>> stockData = objectMapper.readValue(output.toString(),
+                    new TypeReference<List<Map<String, Object>>>() {});
+
+            List<Price> priceList = new ArrayList<>();
             int counter = 0;
 
-            while ((line = reader.readLine()) != null) {
-                String[] stockData = line.split(",");
-                String ticker = stockData[0];
-                String time = stockData[1];
-                String value = stockData[2];
+            // Fetch existing PriceIds for the provided tickers
+            Set<PriceId> existingPriceIds = new HashSet<>(priceRepository.findPriceIdsByTickers(tickers));
+
+            // Process each stock data entry
+            for (Map<String, Object> stock : stockData) {
+                String ticker = (String) stock.get("Ticker");
+                String time = (String) stock.get("Datetime");
+                Double value = Double.parseDouble(stock.get("Price").toString());
 
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 LocalDateTime date = LocalDateTime.parse(time, formatter);
 
-                // Create and save the Stock entity
-                Price price = new Price();
-                price.setTicker(ticker);
-                price.setDate(date);
-                price.setCurrentPrice(Double.parseDouble(value));
+                PriceId priceId = new PriceId(ticker, date);
 
-                if (priceRepository.findById(new PriceId(ticker, date)).isPresent()) {
-                    continue;
+                // Check if the record already exists
+                if (!existingPriceIds.contains(priceId)) {
+                    // Create the Price entity
+                    Price price = new Price();
+                    price.setTicker(ticker);
+                    price.setDate(date);
+                    price.setCurrentPrice(value);
+
+                    priceList.add(price);
+                    counter++;
                 }
 
-                priceRepository.save(price);
-                counter++;
+                // Batch save after every 1000 records
+                if (priceList.size() >= 1000) {
+                    priceRepository.saveAll(priceList);
+                    priceList.clear();
+                }
             }
 
-            System.out.println("Total stocks processed: " + counter);
+            // Save any remaining records
+            if (!priceList.isEmpty()) {
+                priceRepository.saveAll(priceList);
+            }
+
+            System.out.println("Total prices processed: " + counter);
         } catch (Exception e) {
             e.printStackTrace();
         }

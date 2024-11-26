@@ -142,8 +142,6 @@ def extract_stock_prices(session, stock_tickers, range_param='1d', interval='1d'
       # Append to all_stock_data and write to CSV
       all_stock_data.extend(extracted_data)
       writer.writerows(extracted_data)
-      print("Data written to CSV")
-      exit()
   print(f"Data written to {output_file}")
   print(f"Total stocks retrieved: {len(all_stock_data)}")
   return all_stock_data
@@ -157,16 +155,16 @@ def main(stock_tickers):
   return all_stock_data
 
 if __name__ == "__main__":
-  # parser = argparse.ArgumentParser(description='Get stock prices for given tickers.')
-  # parser.add_argument('tickers', nargs='+', help='List of stock tickers')
-  # args = parser.parse_args()
-  # # Extract stock data
-  # all_stock_data = main(args.tickers)
-  # # Print the data as JSON
-  # print(json.dumps(all_stock_data))
-
-  # Get all stock tickers
-  stock_tickers = get_all_stocks_from_file()
+  parser = argparse.ArgumentParser(description='Get stock prices for given tickers.')
+  parser.add_argument('tickers', nargs='+', help='List of stock tickers')
+  args = parser.parse_args()
   # Extract stock data
-  session = start_session()
-  extract_stock_prices(session, stock_tickers, range_param='365d', interval='1d', chunk_size=20)
+  all_stock_data = main(args.tickers)
+  # Print the data as JSON
+  print(json.dumps(all_stock_data))
+
+  # # Get all stock tickers
+  # stock_tickers = get_all_stocks_from_file()
+  # # Extract stock data
+  # session = start_session()
+  # extract_stock_prices(session, stock_tickers, range_param='365d', interval='1d', chunk_size=20)

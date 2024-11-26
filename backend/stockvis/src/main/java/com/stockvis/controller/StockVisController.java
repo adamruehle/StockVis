@@ -14,7 +14,7 @@ import java.util.List;
  * StockVisController handles API requests for stock-related operations.
  */
 @RestController
-@CrossOrigin(origins = "https://localhost:3000")
+@CrossOrigin(origins = "*")
 @RequestMapping("/api")
 public class StockVisController {
 
@@ -29,7 +29,7 @@ public class StockVisController {
         return ResponseEntity.ok("Hello World!");
     }
 
-    @GetMapping(value = "/getTopPrices")
+    @GetMapping(value = "/getTopMarketCaps")
     public ResponseEntity<List<Price>> getTopPrices(@RequestParam(defaultValue = "10") int limit) {
         try {
             List<Price> prices = priceService.getTopPrices(limit);
@@ -58,6 +58,27 @@ public class StockVisController {
             return ResponseEntity.ok("Stock Prices populated successfully!");
         } catch (Exception e) {
             // Log the exception (consider using a logger)
+            return ResponseEntity.status(500).body("Failed to populate stocks prices: " + e.getMessage());
+        }
+    }
+    
+    @PostMapping(value = "/populateTopPrices")
+    public ResponseEntity<String> populateTopPrices(@RequestParam(defaultValue = "100") int limit) {
+        try {
+            stockService.populatePrices(limit);
+            return ResponseEntity.ok("Top " + limit + " stock prices populated successfully!");
+        } catch (Exception e) {
+            // Log the exception (consider using a logger)
+            return ResponseEntity.status(500).body("Failed to populate top stock prices: " + e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/populateMarketCaps") 
+    public ResponseEntity<String> populateMarketCaps() {
+        try {
+            priceService.populateMarketCaps();
+            return ResponseEntity.ok("Market Caps populated successfully!");
+        } catch (Exception e) {
             return ResponseEntity.status(500).body("Failed to populate stocks prices: " + e.getMessage());
         }
     }

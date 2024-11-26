@@ -36,4 +36,38 @@ public class PriceService {
         Pageable pageRequest = PageRequest.of(0, limit);
         return priceRepository.findTopStocksByMarketCap(pageRequest);
     }
+
+    public void populateMarketCaps() {
+         try {
+            String filePath = "backend/scripts/market_caps.csv";
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            reader.readLine(); // Skip the header
+            String line;
+            int counter = 0;
+
+            while ((line = reader.readLine()) != null) {
+                String[] stockData = line.split(",");
+                String ticker = stockData[0];
+                String marketCap = stockData[1];
+
+                List<Price> prices = priceRepository.findByTicker(ticker);
+                // Create and save the Stock entity
+                if (prices.size() == 0) {
+                    continue;
+                }
+                Price price = prices.get(0);
+                if (marketCap.equals("N/A"))  {
+                    price.setMarketCap(null);
+                } else {
+                    price.setMarketCap(Double.parseDouble(marketCap));
+                }
+                priceRepository.save(price);
+                counter++;
+            }
+            reader.close();
+            System.out.println("Total stocks processed: " + counter);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
