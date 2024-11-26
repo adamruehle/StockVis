@@ -50,6 +50,17 @@ public class StockVisController {
         }
     }
 
+    @GetMapping(value = "/getStocks")
+    public ResponseEntity<List<Stock>> getStocks(@RequestParam(defaultValue = "") String tickerString) {
+        try {
+            List<Stock> stocks = stockService.getStocks(tickerString);
+            return ResponseEntity.ok(stocks);
+        } catch (Exception e) {
+            // Log the exception (consider using a logger)
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
     @PostMapping(value = "/populateStocks")
     public ResponseEntity<String> populateStocks() {
         try {

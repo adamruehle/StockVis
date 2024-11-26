@@ -26,7 +26,18 @@ export default function StockData() {
     }
     catch (error) {
       console.error(error);
+    }
   }
+
+  const fetchFilteredStocks = async (query) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/getStocks?tickerString=${query}`)
+      const data = await res.json();
+      setFilteredStocks(data);
+    }
+    catch (error) {
+      console.error(error);
+    }
   }
 return (
   <div className="min-h-screen flex flex-col">
@@ -51,7 +62,7 @@ return (
         </nav>
       </div>
     </header>
-    <main className=" p-10">
+    <main className="p-10">
       <h1 className="text-5xl">Stocks</h1>
       {stocks.length > 0 && (
         <p className="my-3 text-xl">Last Updated: {new Date(stocks[0].date).toLocaleDateString()}</p>
@@ -59,11 +70,11 @@ return (
       
       <div className="my-5 flex overflow-x-auto w-auto">
         {stocks.map((stock) => (
-          <Link className="p-6 border m-4 min-w-max" key={stock.ticker} href={`/stocks/AAPL`}>
-          <div key={stock.ticker} >
-            <h2 className="text-xl font-bold">{stock.ticker}</h2>
-            <p>Current Price: ${stock.currentPrice}</p>
-          </div>
+          <Link className="p-6 border m-4 min-w-max" key={stock.ticker} href={`/stocks/${stock.ticker}`}>
+            <div key={stock.ticker} className="text-2xl">
+              <h2 className="text-3xl font-bold">{stock.ticker}</h2>
+              <p>Current Price: ${stock.currentPrice}</p>
+            </div>
           </Link>
         ))}
       </div>
@@ -71,18 +82,25 @@ return (
         <input
           type="text"
           placeholder="Search by ticker..."
-          value={searchQuery}
           onChange={(e) => {
-        setSearchQuery(e.target.value);
-        const filtered = stocks.filter(stock => 
-          stock.ticker.toLowerCase().includes(e.target.value.toLowerCase())
-        );
-        setFilteredStocks(filtered);
-        getPrice(e.target.value);
+            if (e.target.value.length >= 2) {
+              fetchFilteredStocks(e.target.value);
+            }
           }}
-          className="p-2 border rounded w-full"
+          className="p-4 border text-black rounded w-full text-2xl"
         />
       </div>
+      {filteredStocks.length > 0 && (
+        <ul>
+          {filteredStocks.map((stock) => (
+            <Link key={stock.ticker} href={`/stocks/${stock.ticker}`}>
+            <li key={stock.ticker} className="text-2xl border-b-2 border-gray-300 py-4">
+              {stock.ticker} - {stock.company}
+            </li>
+            </Link>
+          ))}
+        </ul>
+      )}
     </main>
   </div>
 );
