@@ -155,5 +155,27 @@ public class StockService {
         } else {
             return stockRepository.findByTickerContaining(tickerString);
         }
-    }
-}
+    }}
+
+    
+
+    
+    
+    
+    
+    
+
+    
+    
+    
+
+    
+    
+        
+    
+
+    
+    
+    
+        
+    
