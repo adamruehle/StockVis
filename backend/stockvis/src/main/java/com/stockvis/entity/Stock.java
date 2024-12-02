@@ -10,15 +10,14 @@ public class Stock {
 
     @Id
     private String ticker;
-    private String companyName;
 
-
+    @ManyToOne
+    @JoinColumn(name = "company_name", referencedColumnName = "name", nullable = false)
+    private Company company;
 
     private String exchange;
 
-    @ManyToOne
-    @JoinColumn(name = "companyId", nullable = false)
-    private Company company;
+
 
     @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL)
     private List<Price> prices;
@@ -34,12 +33,12 @@ public class Stock {
         this.ticker = ticker;
     }
 
-    public String getCompanyName() {
-        return companyName;
+    public String getCompany() {
+        return company.getName();
     }
 
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
     public String getExchange() {

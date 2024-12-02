@@ -1,5 +1,6 @@
 import requests
 from datetime import datetime, timezone, timedelta
+# from yahoo_fin import stock_info as si
 import json
 import csv
 from bs4 import BeautifulSoup
@@ -12,6 +13,9 @@ import os
 import time
 import pandas as pd
 import re
+# import yahoo_finance as yf
+import yfinance as yf
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def start_session():
   session = requests.Session()
@@ -70,7 +74,7 @@ def get_response(session, url):
     return None
 
 def get_all_stocks_from_file():
-  with open('all_stocks.csv', 'r') as file:
+  with open('scripts/all_stocks.csv', 'r') as file:
     reader = csv.reader(file)
     header = next(reader)
     stock_tickers = [row[0] for row in reader]
@@ -121,35 +125,62 @@ def save_stock_prices(ticker_prices, filename='ticker_prices.csv'):
     for ticker, price in ticker_prices.items():
       writer.writerow([ticker, price])
 
-def extract_stock_prices(session, stock_tickers, range_param='5y', interval='1d', chunk_size=20):
-  """
-  Extract stock data for the given tickers over the specified date range and interval.
+def extract_stock_prices(session, stock_tickers, range_param='1d', interval='1d', chunk_size=20):
+    """
+    Extract stock data for the given tickers over the specified date range and interval.
 
-  Parameters:
-  - session: The requests session to use for API calls.
-  - stock_tickers: A list of stock ticker symbols to retrieve data for.
-  - range_param: The range parameter for the API call (e.g., '1d', '5d', '1mo', '5y', etc.).
-  - interval: The interval parameter for the API call (e.g., '1d', '1wk', '1mo').
-  - chunk_size: The number of tickers to process per API call.
+    Parameters:
+    - session: The requests session to use for API calls.
+    - stock_tickers: A list of stock ticker symbols to retrieve data for.
+    - range_param: The range parameter for the API call (e.g., '1d', '5d', '1mo', '5y', etc.).
+    - interval: The interval parameter for the API call (e.g., '1d', '1wk', '1mo').
+    - chunk_size: The number of tickers to process per API call.
 
-  Returns:
-  - all_stock_data: A list containing the extracted data for all tickers.
-  """
-  all_stock_data = []
+    Returns:
+    - all_stock_data: A list containing the extracted data for all tickers.
+    """
+    all_stock_data = []
 
-  # Process tickers in chunks
-  split_stock_tickers_list = [
-    stock_tickers[i:i + chunk_size] for i in range(0, len(stock_tickers), chunk_size)
-  ]
+    # Prepare the output CSV file
+    output_file = "stockvis/scripts/stock_prices.csv"
+    with open(output_file, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Ticker', 'Datetime', 'Price'])  # Write the header
 
-  for tickers in split_stock_tickers_list:
-    # print(f"Processing tickers: {tickers}")
-    url = generate_data_url(tickers, range_param, interval)
-    data = get_response(session, url)
-    extracted_data = extract_data(data)
-    all_stock_data.extend(extracted_data)
-  print(f"Total stocks retrieved: {len(all_stock_data)}")
-  return all_stock_data  # Optionally, save the data here
+        # Process tickers in chunks
+        split_stock_tickers_list = [
+            stock_tickers[i:i + chunk_size] for i in range(0, len(stock_tickers), chunk_size)
+        ]
+
+        for tickers in split_stock_tickers_list:
+            # Generate API URL
+            url = generate_data_url(tickers, range_param, interval)
+            data = get_response(session, url)
+            extracted_data = []
+
+            # Parse the API response
+            if data and 'spark' in data and 'result' in data['spark']:
+                for stock in data['spark']['result']:
+                    ticker = stock.get('symbol', 'Unknown')
+                    responses = stock.get('response', [])
+                    for resp in responses:
+                        timestamps = resp.get('timestamp', [])
+                        quotes = resp.get('indicators', {}).get('quote', [{}])[0].get('close', [])
+
+                        # Extract and format data
+                        for ts, price in zip(timestamps, quotes):
+                            # Convert timestamp to datetime
+                            date_time = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+                            extracted_data.append([ticker, date_time, price])
+
+            # Append to all_stock_data and write to CSV
+            all_stock_data.extend(extracted_data)
+            writer.writerows(extracted_data)
+
+    print(f"Data written to {output_file}")
+    print(f"Total stocks retrieved: {len(all_stock_data)}")
+
+    return all_stock_data
 
 def extract_all_company_data_for_tickers():
   driver = start_driver()
@@ -336,9 +367,60 @@ def extract_all_balance_sheets_for_tickers(sheet_type):
     df.to_csv(csv_file, index=False)
   driver.quit()
 
+def get_market_cap(tickers):
+  """
+  Fetches the market cap for the given list of tickers.
+  Args:
+    tickers (list): List of stock ticker symbols.
+  Returns:
+    dict: A dictionary mapping ticker symbols to their market cap.
+  """
+  # Join tickers into a single string separated by spaces
+  tickers_str = " ".join(tickers)
+  # Fetch data for multiple tickers
+  data = yf.Tickers(tickers_str)
+  # Initialize a dictionary to store results
+  market_caps = {}
+  # Check if the file exists
+  # Need to get which stocks have already been processed
+  header_exists = False
+  if os.path.exists('scripts/market_caps.csv'):
+    with open('scripts/market_caps.csv', 'r', newline='', encoding='utf-8') as file:
+      reader = csv.reader(file)
+      # Make sure there is a header
+      header_exists = any(reader)
+      for row in reader:
+        if row:
+          market_caps[row[0]] = row[1]
+  # Remove the tickers that have already been processed
+  tickers = [ticker for ticker in tickers if ticker not in market_caps]
+  # Iterate through each ticker
+  with open('scripts/market_caps.csv', 'a', newline='', encoding='utf-8') as f:
+    writer = csv.writer(f)
+    if not header_exists:
+      writer.writerow(['Ticker', 'Market Cap'])
+      header_exists = True
+  for ticker in tickers:
+    try:
+      # Access the specific ticker's information
+      info = data.tickers[ticker].info
+      # Extract market cap
+      market_cap = info.get("marketCap", "N/A")
+      print(f"Ticker: {ticker}, Market Cap: {market_cap}")
+      market_caps[ticker] = market_cap
+    except Exception as e:
+      market_caps[ticker] = f"Error: {str(e)}"
+    with open('scripts/market_caps.csv', 'a', newline='', encoding='utf-8') as f:
+      writer = csv.writer(f)
+      # Save each ticker with it's market cap in a csv file
+      writer.writerow([ticker, market_caps[ticker]])
+  return market_caps
+
 if __name__ == "__main__":
   # session = start_session()
-  # stock_tickers = get_all_stocks_from_file()
+  stock_tickers = get_all_stocks_from_file()
+  # print(stock_tickers)
   # all_stock_data = extract_stock_prices(session, stock_tickers)
   # extract_all_company_data_for_tickers()
-  extract_all_balance_sheets_for_tickers(sheet_type='income')
+  # extract_all_balance_sheets_for_tickers(sheet_type='income')
+  market_caps = get_market_cap(stock_tickers)

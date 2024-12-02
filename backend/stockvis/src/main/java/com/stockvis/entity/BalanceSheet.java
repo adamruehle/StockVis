@@ -11,8 +11,9 @@ import java.util.Date;
 public class BalanceSheet implements Serializable {
 
     @Id
-    @Column(name = "company_id", length = 10)
-    private String companyId;
+    @ManyToOne
+    @JoinColumn(name = "company_name", referencedColumnName = "name", nullable = false)
+    private Company company;
 
     @Id
     @Column(name = "date")
