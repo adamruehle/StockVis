@@ -4,9 +4,6 @@ import pandas as pd
 import csv
 import time 
 
-stock_list_path = 'all_stocks.csv'
-
-
 def get_stocks(file_path):
     print(os.getcwd())
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -18,12 +15,13 @@ def get_stocks(file_path):
     stock_list = stock_df.index.to_list()
     return stock_list
 
-def get_dividend_data(stock_list):
+def get_dividend_data(stock_list, start_date = '2020-01-01', end_date = '2024-12-01'):
     dividend_data = []
-    start_date = '2020-01-01'
-    end_date = '2024-12-01'
+    start_date = start_date
+    end_date = end_date
     dates = pd.date_range(start=start_date, end= end_date)
     for symbol in stock_list:
+        dividends = []
         stock = yf.Ticker(symbol)
         dividends = stock.dividends
         dividends.index = pd.to_datetime(dividends.index)
