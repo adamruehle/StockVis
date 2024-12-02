@@ -12,5 +12,4 @@ import java.util.List;
 public interface StockRepository extends JpaRepository<Stock, String> {
     List<Stock> findByTicker(String ticker);
 
-
 }

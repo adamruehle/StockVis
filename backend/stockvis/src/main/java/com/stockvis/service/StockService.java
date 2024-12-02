@@ -26,11 +26,16 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.io.File;
+import java.util.Iterator;
+import com.fasterxml.jackson.databind.JsonNode;
 
 @Service
 public class StockService {
@@ -40,6 +45,7 @@ public class StockService {
 
     @Autowired
     private PriceRepository priceRepository;
+
     @Autowired
     private CompanyRepository companyRepository;
 
@@ -88,63 +94,77 @@ public class StockService {
 
     public void populatePrices(List<String> tickers) {
         try {
-            // Prepare the command to call the Python script with tickers as arguments
-            List<String> command = new ArrayList<>();
-            command.add("python3");
-            command.add("scripts/get_stock_prices.py");
-            command.addAll(tickers);
+            String tickersString = tickers.stream()
+                    .map(ticker -> ticker)
+                    .collect(Collectors.joining("+"));
+            System.out.println(tickersString);
 
-            // Call Python script to retrieve stock prices
-            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            // Get the project root directory
+            String projectRoot = System.getProperty("user.dir");
+            // Construct path to Python script
+            File scriptFile = new File(projectRoot, "backend/stockvis/scripts/get_stock_prices.py").getAbsoluteFile();
+            if (!scriptFile.exists()) {
+                throw new RuntimeException("Python script not found at: " + scriptFile.getPath());
+            }
+
+            ProcessBuilder processBuilder = new ProcessBuilder("python3", scriptFile.getPath(), tickersString);
+            // Set working directory to project root
+            processBuilder.directory(new File(projectRoot));
+
+            // Debug print command and arguments
+            System.out.println("Command: " + String.join(" ", processBuilder.command()));
+            System.out.println("Working directory: " + processBuilder.directory().getAbsolutePath());
+            System.out.println("Tickers: " + tickersString);
+
+            processBuilder.redirectErrorStream(true);
             Process process = processBuilder.start();
 
-            // Read JSON data from Python script's stdout
+            // Read combined output
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             StringBuilder output = new StringBuilder();
+
             String line;
             while ((line = reader.readLine()) != null) {
-                output.append(line);
+                System.out.println("Python output: " + line); // Print output in real-time
+                output.append(line).append("\n");
             }
-            process.waitFor(); // Wait for the script to finish
+
+            int exitCode = process.waitFor();
+            System.out.println("Exit code: " + exitCode);
+            System.out.println("Final output: " + output.toString());
+
+            if (exitCode != 0) {
+                throw new RuntimeException("Python script failed with exit code: " + exitCode);
+            }
 
             // Parse JSON data
             ObjectMapper objectMapper = new ObjectMapper();
-            List<Map<String, Object>> stockData = objectMapper.readValue(output.toString(),
-                    new TypeReference<List<Map<String, Object>>>() {});
-
+            JsonNode rootNode = objectMapper.readTree(output.toString());
             List<Price> priceList = new ArrayList<>();
             int counter = 0;
 
-            // Fetch existing PriceIds for the provided tickers
-            Set<PriceId> existingPriceIds = new HashSet<>(priceRepository.findPriceIdsByTickers(tickers));
+            // Iterate through each field in the JSON object
+            Iterator<Map.Entry<String, JsonNode>> fields = rootNode.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> entry = fields.next();
+                String ticker = entry.getKey();
+                JsonNode priceData = entry.getValue();
 
-            // Process each stock data entry
-            for (Map<String, Object> stock : stockData) {
-                String ticker = (String) stock.get("Ticker");
-                String time = (String) stock.get("Datetime");
-                Double value = Double.parseDouble(stock.get("Price").toString());
+                for (JsonNode dataPoint : priceData) {
+                    String dateStr = dataPoint.get(1).asText();
+                    Double price = dataPoint.get(2).asDouble();
 
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                LocalDateTime date = LocalDateTime.parse(time, formatter);
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                    LocalDateTime date = LocalDateTime.parse(dateStr, formatter);
 
-                PriceId priceId = new PriceId(ticker, date);
+                    // Create Price object using setters
+                    Price priceEntity = new Price();
+                    priceEntity.setTicker(ticker);
+                    priceEntity.setDate(date);
+                    priceEntity.setCurrentPrice(price);
 
-                // Check if the record already exists
-                if (!existingPriceIds.contains(priceId)) {
-                    // Create the Price entity
-                    Price price = new Price();
-                    price.setTicker(ticker);
-                    price.setDate(date);
-                    price.setCurrentPrice(value);
-
-                    priceList.add(price);
+                    priceList.add(priceEntity);
                     counter++;
-                }
-
-                // Batch save after every 1000 records
-                if (priceList.size() >= 1000) {
-                    priceRepository.saveAll(priceList);
-                    priceList.clear();
                 }
             }
 

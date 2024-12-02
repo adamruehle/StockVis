@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,6 +24,7 @@ public class StockVisController {
 
     @Autowired
     private PriceService priceService;
+
     @GetMapping(value = "/hello")
     public ResponseEntity<String> hello() {
         // Replace with actual logic to fetch and return stocks
@@ -32,7 +34,7 @@ public class StockVisController {
     @GetMapping(value = "/getTopMarketCaps")
     public ResponseEntity<List<Price>> getTopPrices(@RequestParam(defaultValue = "10") int limit) {
         try {
-            List<Price> prices = priceService.getTopPrices(limit);
+            List<Price> prices = priceService.getTopMarketCaps(limit);
             return ResponseEntity.ok(prices);
         } catch (Exception e) {
             // Log the exception (consider using a logger)
@@ -52,20 +54,26 @@ public class StockVisController {
     }
 
     @PostMapping(value = "/populatePrices")
-    public ResponseEntity<String> populatePrices() {
+    public ResponseEntity<String> populatePrices(@RequestParam List<String> tickers,
+            @RequestParam List<String> dateRange, @RequestParam String interval) {
         try {
-            stockService.populatePrices();
+            stockService.populatePrices(tickers);
             return ResponseEntity.ok("Stock Prices populated successfully!");
         } catch (Exception e) {
             // Log the exception (consider using a logger)
             return ResponseEntity.status(500).body("Failed to populate stocks prices: " + e.getMessage());
         }
     }
-    
+
     @PostMapping(value = "/populateTopPrices")
     public ResponseEntity<String> populateTopPrices(@RequestParam(defaultValue = "100") int limit) {
         try {
-            stockService.populatePrices(limit);
+            List<Price> tickers = priceService.getTopMarketCaps(limit);
+            List<String> tickerStrings = new ArrayList<String>();
+            for (Price price : tickers) {
+                tickerStrings.add(price.getTicker());
+            }
+            stockService.populatePrices(tickerStrings);
             return ResponseEntity.ok("Top " + limit + " stock prices populated successfully!");
         } catch (Exception e) {
             // Log the exception (consider using a logger)
@@ -73,7 +81,7 @@ public class StockVisController {
         }
     }
 
-    @PostMapping(value = "/populateMarketCaps") 
+    @PostMapping(value = "/populateMarketCaps")
     public ResponseEntity<String> populateMarketCaps() {
         try {
             priceService.populateMarketCaps();
@@ -82,6 +90,5 @@ public class StockVisController {
             return ResponseEntity.status(500).body("Failed to populate stocks prices: " + e.getMessage());
         }
     }
-
 
 }

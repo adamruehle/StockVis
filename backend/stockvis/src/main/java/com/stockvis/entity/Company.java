@@ -7,10 +7,9 @@ import java.util.List;
 @Table(name = "company")
 public class Company {
 
-
-
     @Id
     private String name;
+
     private String sector;
     private String industry;
     private String headquarters;
