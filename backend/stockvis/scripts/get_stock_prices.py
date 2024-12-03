@@ -141,7 +141,6 @@ if __name__ == "__main__":
     parser.add_argument('interval', help='Interval parameter for the API call (e.g., 1d, 1wk, 1mo)')
     parser.add_argument('tickers', help='List of stock tickers separated by +')
     args = parser.parse_args()
-    
     stock_tickers = args.tickers.split('+')
     session = start_session()
     data = extract_stock_prices(session, stock_tickers, args.range, args.interval, chunk_size=20)

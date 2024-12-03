@@ -88,10 +88,6 @@ public class StockService {
     public void populatePrices(List<String> tickers, String range, String interval) {
         try {
 
-            // for (String ticker : tickers) {
-            // System.out.println(ticker);
-            // }
-
             Process process = executePythonScript(tickers, range, interval);
             String jsonOutput = readProcessOutput(process);
             System.out.println("JSON output: " + jsonOutput);
@@ -104,6 +100,7 @@ public class StockService {
                 price.setDate(LocalDateTime.parse((String) stockData.get(1),
                         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
                 price.setCurrentPrice(((Number) stockData.get(2)).doubleValue());
+                price.setStock(stockRepository.findById(price.getTicker()).orElse(null));
                 System.out.println(price.getTicker() + " " + price.getDate() + " " + price.getCurrentPrice());
                 priceRepository.save(price);
             }

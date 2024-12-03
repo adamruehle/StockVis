@@ -74,6 +74,20 @@ public class StockVisController {
         }
     }
 
+    @GetMapping(value = "/getStockPrices")
+    public ResponseEntity<List<Price>> getStockPrices(@RequestParam(defaultValue = "") String ticker) {
+        try {
+            List<String> tickers = new ArrayList<String>();
+            tickers.add(ticker);
+            stockService.populatePrices(tickers, "5y", "1mo");
+            List<Price> prices = priceService.getStockPrices(ticker);
+            return ResponseEntity.ok(prices);
+        } catch (Exception e) {
+            // Log the exception (consider using a logger)
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
     @GetMapping(value = "/getEconomicData")
     public ResponseEntity<List<EconomicData>> getEconomicData() {
         try {
