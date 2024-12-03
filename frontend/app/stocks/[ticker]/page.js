@@ -13,6 +13,7 @@ export default function StockDetails({ params }) {
   const [ticker, setTicker] = useState(null); // State for unwrapped ticker
   const [stockData, setStockData] = useState(null); // State to store stock data
   const [priceHistory, setPriceHistory] = useState([]); // State for price history
+  const [dividendData, setDividendData] = useState([]); // State for dividend data
   const [error, setError] = useState(null); // State for error handling
 
   useEffect(() => {
@@ -48,7 +49,27 @@ export default function StockDetails({ params }) {
         }
       };
 
+      const fetchDividendData = async () => {
+        try {
+          const res = await fetch(
+            `http://localhost:8080/api/getDividends?ticker=${ticker}`,
+            {
+              cache: "no-store", // Prevent caching
+            }
+          );
+          if (!res.ok) {
+            throw new Error("Error fetching dividend data");
+          }
+          const data = await res.json();
+          setDividendData(data); 
+        } catch (err) {
+          console.error(err);
+          setError(err.message);
+        }
+      };
+
       fetchStockData();
+      fetchDividendData();
     }
   }, [ticker]);
 
@@ -63,7 +84,7 @@ export default function StockDetails({ params }) {
   // Prepare data for the line chart
   const chartData = {
     labels: priceHistory.map((point) =>
-      dayjs(point.date).format("MMM DD, YYYY HH:mm")
+      dayjs(point.date).format("MMM YYYY")
     ), // Format dates for better readability
     datasets: [
       {
@@ -76,11 +97,42 @@ export default function StockDetails({ params }) {
     ],
   };
 
+  const dividendChartData = {
+    labels: dividendData.map((point) =>
+      dayjs(point.date).format("MMM YYYY")
+    ), // Format dates for better readability
+    datasets: [
+      {
+        label: `${ticker} Dividends`,
+        data: dividendData.map((point) => point.dividendAmount), // Extract prices
+        fill: true,
+        backgroundColor: "#5400dc55",
+        borderColor: "#5400dc",
+      },
+    ],
+  };
+
+  const dividendChartData2 = {
+    labels: dividendData.map((point) =>
+      dayjs(point.date).format("MMM YYYY")
+    ), // Format dates for better readability
+    datasets: [
+      {
+        label: `${ticker} Div Yield`,
+        data: dividendData.map((point) => point.dividendYield), // Extract prices
+        fill: true,
+        backgroundColor: "#5400dc55",
+        borderColor: "#5400dc",
+      },
+    ],
+  };
+
   const chartOptions = {
     responsive: true,
     plugins: {
       legend: {
-        display: false,
+        display: true,
+        
         position: "top",
         labels: {
           color: "white",
@@ -165,6 +217,23 @@ export default function StockDetails({ params }) {
           <h2 className="text-3xl font-bold mb-5">Stock Price History</h2>
           <Line data={chartData} options={chartOptions} />
         </div>
+
+        
+
+          <div>
+            <h2 className="text-3xl font-bold my-5">Dividend History</h2>
+            <div className="flex justify-between">
+            <div className="w-1/2 inline-block">
+            <Line data={dividendChartData} options={chartOptions} />
+            </div>
+            <div className="w-1/2 inline-block">
+            <Line data={dividendChartData2} options={chartOptions} />
+            </div>
+            </div>
+
+        
+          </div>
+       
       </main>
     </div>
   );

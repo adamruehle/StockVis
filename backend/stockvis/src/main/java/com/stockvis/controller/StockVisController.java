@@ -1,5 +1,6 @@
 package com.stockvis.controller;
 
+import com.stockvis.entity.Dividend;
 import com.stockvis.entity.EconomicData;
 import com.stockvis.entity.Price;
 import com.stockvis.entity.Stock;
@@ -82,6 +83,21 @@ public class StockVisController {
             stockService.populatePrices(tickers, "5y", "1mo");
             List<Price> prices = priceService.getStockPrices(ticker);
             return ResponseEntity.ok(prices);
+        } catch (Exception e) {
+            // Log the exception (consider using a logger)
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    @GetMapping(value = "/getDividends")
+    public ResponseEntity<List<Dividend>> getDividends(@RequestParam(defaultValue = "") String ticker) {
+
+        try {
+            List<String> tickers = new ArrayList<String>();
+            tickers.add(ticker);
+            dividendService.populateDividends(tickers);
+            List<Dividend> dividends = dividendService.getDividends(ticker);
+            return ResponseEntity.ok(dividends);
         } catch (Exception e) {
             // Log the exception (consider using a logger)
             return ResponseEntity.status(500).body(null);

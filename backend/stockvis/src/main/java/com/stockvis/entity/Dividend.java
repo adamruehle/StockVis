@@ -2,11 +2,13 @@ package com.stockvis.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "dividend")
 @IdClass(DividendId.class)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Dividend {
 
     @Id
@@ -16,6 +18,14 @@ public class Dividend {
     @Id
     @Column(name = "date")
     private LocalDate date;
+
+    @ManyToOne
+    @JoinColumn(name = "ticker", referencedColumnName = "ticker", insertable = false, updatable = false)
+    private Stock stock;
+
+    private double dividendAmount;
+
+    private double dividendYield;
 
     public String getTicker() {
         return ticker;
@@ -49,12 +59,12 @@ public class Dividend {
         this.dividendYield = dividendYield;
     }
 
-    @ManyToOne
-    @JoinColumn(name = "ticker", referencedColumnName = "ticker", insertable = false, updatable = false)
-    private Stock stock;
+    public Stock getStock() {
+        return stock;
+    }
 
-    private double dividendAmount;
-
-    private double dividendYield;
+    public void setStock(Stock stock) {
+        this.stock = stock;
+    }
 
 }

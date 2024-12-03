@@ -53,7 +53,7 @@ def get_dividend_data(stock_list, start_date = '2020-01-01', end_date = '2024-12
                     except (IndexError, KeyError): close_price = None
                     dividend_yield = amount / close_price if close_price else None
                     dividend_tuple = (symbol, date.date(), close_price, amount, dividend_yield, frequency )
-                    print(dividend_tuple)
+                    # print(dividend_tuple)
                     dividend_data.append(dividend_tuple)
         time.sleep(1)
     return dividend_data
@@ -75,17 +75,20 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     stock_tickers = args.tickers.split('+')
-    session = start_session()
-    data = extract_stock_prices(session, stock_tickers)
-    
-    # Format data as map instead of array
-    formatted_data = {
-        "stocks": data
-    }
+    data = get_dividend_data(stock_tickers)
+   
+    formatted_data = [
+        {
+            "ticker": record[0],
+            "date": record[1].isoformat(),  # Convert date to ISO 8601 string
+            "currentPrice": float(record[2]),  # Convert np.float64 to Python float
+            "dividendAmount": record[3],
+            "dividendYield": float(record[4]),  # Convert np.float64 to Python float
+            "frequency": record[5],
+        }
+        for record in data
+    ]
+
     print(json.dumps(formatted_data))
-    
-    #stocks = get_stocks(stock_list_path)
-    #data = get_dividend_data(stocks)
-    #save_dividends_to_file(data, 'all_dividends.csv')
     
     
