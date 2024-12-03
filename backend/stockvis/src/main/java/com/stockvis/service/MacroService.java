@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.stockvis.entity.EconomicData;
-import com.stockvis.entity.Price;
 import com.stockvis.repository.EconomicDataRepository;
 
 @Service
@@ -54,5 +53,9 @@ public class MacroService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public List<EconomicData> getEconomicData() {
+        return economicDataRepository.findAll();
     }
 }

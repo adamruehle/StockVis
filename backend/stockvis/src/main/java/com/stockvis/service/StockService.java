@@ -1,8 +1,6 @@
 package com.stockvis.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,29 +10,18 @@ import com.stockvis.entity.Stock;
 import com.stockvis.repository.CompanyRepository;
 import com.stockvis.repository.PriceRepository;
 import com.stockvis.repository.StockRepository;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
-
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.io.File;
-import java.util.Iterator;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -162,5 +149,17 @@ public class StockService {
         }
 
         return output.toString();
+    }
+
+    public List<Stock> getStocks(String tickerString) {
+        Set<Stock> stocks = new LinkedHashSet<>();
+        if (tickerString.isEmpty()) {
+            return stockRepository.findAll();
+        } else {
+
+            stocks.addAll(stockRepository.findByTickerContaining(tickerString));
+            stocks.addAll(stockRepository.findByCompanyContaining(tickerString));
+            return new ArrayList<>(stocks);
+        }
     }
 }
