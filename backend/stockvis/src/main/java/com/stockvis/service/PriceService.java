@@ -77,4 +77,8 @@ public class PriceService {
         return priceRepository.findTopStocksByMarketCap(pageRequest, exchange);
     }
 
+    public List<Price> getStockPrices(String ticker) {
+        return priceRepository.findByTicker(ticker);
+    }
+
 }
