@@ -15,4 +15,7 @@ public interface StockRepository extends JpaRepository<Stock, String> {
     @Query("SELECT s FROM Stock s WHERE s.ticker LIKE %:tickerString%")
     List<Stock> findByTickerContaining(@Param("tickerString") String tickerString);
 
+    @Query("SELECT s FROM Stock s WHERE s.company.name LIKE %:tickerString%")
+    List<Stock> findByCompanyContaining(@Param("tickerString") String tickerString);
+
 }

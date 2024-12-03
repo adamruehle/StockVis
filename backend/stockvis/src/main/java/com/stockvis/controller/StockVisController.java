@@ -1,5 +1,6 @@
 package com.stockvis.controller;
 
+import com.stockvis.entity.EconomicData;
 import com.stockvis.entity.Price;
 import com.stockvis.entity.Stock;
 import com.stockvis.service.DividendService;
@@ -55,6 +56,17 @@ public class StockVisController {
         try {
             List<Stock> stocks = stockService.getStocks(tickerString);
             return ResponseEntity.ok(stocks);
+        } catch (Exception e) {
+            // Log the exception (consider using a logger)
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    @GetMapping(value = "/getEconomicData")
+    public ResponseEntity<List<EconomicData>> getEconomicData() {
+        try {
+            List<EconomicData> economicData = macroService.getEconomicData();
+            return ResponseEntity.ok(economicData);
         } catch (Exception e) {
             // Log the exception (consider using a logger)
             return ResponseEntity.status(500).body(null);
@@ -131,13 +143,4 @@ public class StockVisController {
         }
     }
 
-    }
-
-    
-    
-        
-    
-
-        
-
-    
+}

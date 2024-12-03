@@ -21,12 +21,6 @@ public class Company {
     @OneToMany(mappedBy = "name", cascade = CascadeType.ALL)
     private List<CompanyFinancial> companyFinancials;
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
-    private List<BalanceSheet> balanceSheets;
-
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
-    private List<IncomeStatement> incomeStatements;
-
     public String getName() {
         return name;
     }

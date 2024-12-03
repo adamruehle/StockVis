@@ -41,11 +41,11 @@ export default async function StockDetails({ params }) {
           </div>
         </header>
         <main className='p-14'>
-        <div className='flex justify-between'>
-        <h1 className='font-bold text-5xl'>{stock.company}</h1>
-        <h1 className='font-bold text-5xl'>{stock.ticker}</h1>
-        </div>
-        <p>Current Price:</p>
+          <div className='flex justify-between'>
+            <h1 className='font-bold text-5xl'>{stock.company}</h1>
+            <h1 className='font-bold text-5xl'>{stock.ticker}</h1>
+          </div>
+          <p>Current Price:</p>
         </main>
       </div>
     );

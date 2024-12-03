@@ -17,8 +17,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
-
+import java.util.Set;
 import java.io.File;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -150,32 +152,14 @@ public class StockService {
     }
 
     public List<Stock> getStocks(String tickerString) {
+        Set<Stock> stocks = new LinkedHashSet<>();
         if (tickerString.isEmpty()) {
             return stockRepository.findAll();
         } else {
-            return stockRepository.findByTickerContaining(tickerString);
+
+            stocks.addAll(stockRepository.findByTickerContaining(tickerString));
+            stocks.addAll(stockRepository.findByCompanyContaining(tickerString));
+            return new ArrayList<>(stocks);
         }
-    }}
-
-    
-
-    
-    
-    
-    
-    
-
-    
-    
-    
-
-    
-    
-        
-    
-
-    
-    
-    
-        
-    
+    }
+}
