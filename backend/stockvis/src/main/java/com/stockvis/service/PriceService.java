@@ -31,12 +31,6 @@ public class PriceService {
     @Autowired
     private CompanyRepository companyRepository;
 
-    public List<Price> getTopMarketCaps(int limit) {
-
-        Pageable pageRequest = PageRequest.of(0, limit);
-        return priceRepository.findTopStocksByMarketCap(pageRequest);
-    }
-
     public void populateMarketCaps() {
         try {
             String filePath = "backend/scripts/market_caps.csv";
@@ -69,6 +63,18 @@ public class PriceService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public List<Price> getTopMarketCaps(int limit) {
+
+        Pageable pageRequest = PageRequest.of(0, limit);
+        return priceRepository.findTopStocksByMarketCap(pageRequest);
+    }
+
+    public List<Price> getTopMarketCapsByExchange(int limit, String exchange) {
+
+        Pageable pageRequest = PageRequest.of(0, limit);
+        return priceRepository.findTopStocksByMarketCap(pageRequest, exchange);
     }
 
 }

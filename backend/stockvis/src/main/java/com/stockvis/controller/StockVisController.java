@@ -40,8 +40,19 @@ public class StockVisController {
         return ResponseEntity.ok("Hello World!");
     }
 
-    @GetMapping(value = "/getTopMarketCaps")
-    public ResponseEntity<List<Price>> getTopPrices(@RequestParam(defaultValue = "10") int limit) {
+    @GetMapping(value = "/getStocks")
+    public ResponseEntity<List<Stock>> getStocks(@RequestParam(defaultValue = "") String tickerString) {
+        try {
+            List<Stock> stocks = stockService.getStocks(tickerString);
+            return ResponseEntity.ok(stocks);
+        } catch (Exception e) {
+            // Log the exception (consider using a logger)
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    @GetMapping(value = "/getTopStocks")
+    public ResponseEntity<List<Price>> getTopStocks(@RequestParam(defaultValue = "10") int limit) {
         try {
             List<Price> prices = priceService.getTopMarketCaps(limit);
             return ResponseEntity.ok(prices);
@@ -51,11 +62,12 @@ public class StockVisController {
         }
     }
 
-    @GetMapping(value = "/getStocks")
-    public ResponseEntity<List<Stock>> getStocks(@RequestParam(defaultValue = "") String tickerString) {
+    @GetMapping(value = "/getTopStocksByExchange")
+    public ResponseEntity<List<Price>> getTopStocksByExchange(@RequestParam(defaultValue = "10") int limit,
+            @RequestParam String exchange) {
         try {
-            List<Stock> stocks = stockService.getStocks(tickerString);
-            return ResponseEntity.ok(stocks);
+            List<Price> prices = priceService.getTopMarketCapsByExchange(limit, exchange);
+            return ResponseEntity.ok(prices);
         } catch (Exception e) {
             // Log the exception (consider using a logger)
             return ResponseEntity.status(500).body(null);

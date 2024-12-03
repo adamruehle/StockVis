@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Line } from 'react-chartjs-2';
 import 'chart.js/auto';
+import { text } from '@fortawesome/fontawesome-svg-core';
 
 export default function StockData() {
   const [economicData, setEconomicData] = useState([]);
@@ -48,8 +49,9 @@ export default function StockData() {
           label: fieldMapping[dataType],
           data: economicData.map((data) => data[dataType]),
           fill: false,
-          backgroundColor: "rgba(75,192,192,0.4)",
-          borderColor: "rgba(75,192,192,1)",
+          backgroundColor: "#5400dc",
+          borderColor: "#5400dc",
+          pointColor: "#5400dc",
         },
       ],
     });
@@ -71,7 +73,7 @@ export default function StockData() {
                 </Link>
               </li>
               <li>
-                <Link href="/stockdata" className="hover:text-white">
+                <Link href="/stocks" className="hover:text-white">
                   Stock Data
                 </Link>
               </li>
@@ -101,13 +103,13 @@ export default function StockData() {
           <select
             id="economic-data"
             name="economic-data"
-            className="mt-2 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+            className="mt-2 block w-full p-10 text-lg text-black rounded-md border-accent"
             onChange={(e) => setSelectedDataType(e.target.value)} // Update selected data type
           >
-            <option value="gdp">GDP</option>
-            <option value="inflationRate">Inflation Rate</option>
-            <option value="unemploymentRate">Unemployment Rate</option>
-            <option value="interestRate">Interest Rates</option>
+            <option value="gdp" className="text-black">GDP</option>
+            <option value="inflationRate" className="text-black">Inflation Rate</option>
+            <option value="unemploymentRate" className="text-black">Unemployment Rate</option>
+            <option value="interestRate" className="text-black">Interest Rates</option>
           </select>
         </div>
 

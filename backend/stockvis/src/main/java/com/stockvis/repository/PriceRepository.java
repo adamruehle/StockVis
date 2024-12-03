@@ -27,4 +27,15 @@ public interface PriceRepository extends JpaRepository<Price, PriceId> {
                 ORDER BY p.marketCap DESC
             """)
     List<Price> findTopStocksByMarketCap(Pageable pageRequest);
+
+    @Query("""
+                SELECT p FROM Price p
+                JOIN Stock s ON s.ticker = p.ticker
+                WHERE p.date = (
+                    SELECT MIN(p2.date) FROM Price p2 WHERE p2.ticker = s.ticker
+                )
+                AND s.exchange = :exchange
+                ORDER BY p.marketCap DESC
+            """)
+    List<Price> findTopStocksByMarketCap(Pageable pageRequest, @Param("exchange") String exchange);
 }
