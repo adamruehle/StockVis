@@ -2,6 +2,8 @@ package com.stockvis.controller;
 
 import com.stockvis.entity.Price;
 import com.stockvis.entity.Stock;
+import com.stockvis.service.DividendService;
+import com.stockvis.service.MacroService;
 import com.stockvis.service.PriceService;
 import com.stockvis.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,12 @@ public class StockVisController {
 
     @Autowired
     private PriceService priceService;
+
+    @Autowired
+    private MacroService macroService;
+
+    @Autowired
+    private DividendService dividendService;
 
     @GetMapping(value = "/hello")
     public ResponseEntity<String> hello() {
@@ -57,7 +65,7 @@ public class StockVisController {
     public ResponseEntity<String> populatePrices(@RequestParam List<String> tickers,
             @RequestParam List<String> dateRange, @RequestParam String interval) {
         try {
-            stockService.populatePrices(tickers);
+            stockService.populatePrices(tickers, "1d", "1d");
             return ResponseEntity.ok("Stock Prices populated successfully!");
         } catch (Exception e) {
             // Log the exception (consider using a logger)
@@ -69,15 +77,36 @@ public class StockVisController {
     public ResponseEntity<String> populateTopPrices(@RequestParam(defaultValue = "100") int limit) {
         try {
             List<Price> tickers = priceService.getTopMarketCaps(limit);
+
             List<String> tickerStrings = new ArrayList<String>();
             for (Price price : tickers) {
                 tickerStrings.add(price.getTicker());
             }
-            stockService.populatePrices(tickerStrings);
+            stockService.populatePrices(tickerStrings, "1d", "30");
             return ResponseEntity.ok("Top " + limit + " stock prices populated successfully!");
         } catch (Exception e) {
             // Log the exception (consider using a logger)
             return ResponseEntity.status(500).body("Failed to populate top stock prices: " + e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/populateMacroData")
+    public ResponseEntity<String> populateMacroData() {
+        try {
+            macroService.populateMacroData();
+            return ResponseEntity.ok("Macro Data populated successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Failed to populate macro data: " + e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/populateDividendData")
+    public ResponseEntity<String> populateDividendData() {
+        try {
+            dividendService.populateDividendData();
+            return ResponseEntity.ok("Dividend Data populated successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Failed to populate dividend data: " + e.getMessage());
         }
     }
 

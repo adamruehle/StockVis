@@ -30,17 +30,17 @@ def get_response(session, url):
   response = session.get(url)
   try:
     response.raise_for_status()
-    print("Response status code:", response.status_code)
+    # print("Response status code:", response.status_code)
     return response.json()
   except requests.exceptions.HTTPError as e:
-    print(f"HTTP error occurred: {e}")
-    print(f"Response status code: {response.status_code}")
-    print(f"Response text: {response.text}")
+    # print(f"HTTP error occurred: {e}")
+    # print(f"Response status code: {response.status_code}")
+    # print(f"Response text: {response.text}")
     return None
   except json.decoder.JSONDecodeError as e:
-    print(f"JSON decode error occurred: {e}")
-    print(f"Response status code: {response.status_code}")
-    print(f"Response text: {response.text}")
+    # print(f"JSON decode error occurred: {e}")
+    # print(f"Response status code: {response.status_code}")
+    # print(f"Response text: {response.text}")
     return None
 
 def get_all_stocks_from_file():
@@ -72,7 +72,7 @@ def extract_data(data):
           not response['indicators']['quote'] or
           'close' not in response['indicators']['quote'][0] or
           not response['indicators']['quote'][0]['close']):
-          print(f"No data available for symbol: {ticker}")
+          # print(f"No data available for symbol: {ticker}")
           continue  # Skip this stock
       timestamps = response['timestamp']
       prices = response['indicators']['quote'][0]['close']
@@ -84,7 +84,7 @@ def extract_data(data):
       all_stock_data.append({'ticker': ticker, 'data': stock_entries})
       # print(f"Retrieved data for symbol: {ticker}")
     except Exception as e:
-      print(f"Error processing symbol {stock.get('symbol', 'Unknown')}: {e}")
+      # print(f"Error processing symbol {stock.get('symbol', 'Unknown')}: {e}")
       continue  # Skip to the next stock
   return all_stock_data
 
@@ -121,7 +121,7 @@ def extract_stock_prices(session, stock_tickers, range_param='1d', interval='1d'
       stock_tickers[i:i + chunk_size] for i in range(0, len(stock_tickers), chunk_size)
     ]
     for tickers in split_stock_tickers_list:
-      print(tickers)
+      # print(tickers)
       # Generate API URL
       url = generate_data_url(tickers, range_param, interval)
       data = get_response(session, url)
@@ -142,10 +142,7 @@ def extract_stock_prices(session, stock_tickers, range_param='1d', interval='1d'
       # Append to all_stock_data and write to CSV
       all_stock_data.extend(extracted_data)
       writer.writerows(extracted_data)
-      print("Data written to CSV")
       exit()
-  print(f"Data written to {output_file}")
-  print(f"Total stocks retrieved: {len(all_stock_data)}")
   return all_stock_data
 
 def main(stock_tickers):

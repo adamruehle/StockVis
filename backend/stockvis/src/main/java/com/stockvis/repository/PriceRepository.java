@@ -22,7 +22,7 @@ public interface PriceRepository extends JpaRepository<Price, PriceId> {
                 SELECT p FROM Price p
                 JOIN Stock s ON s.ticker = p.ticker
                 WHERE p.date = (
-                    SELECT MAX(p2.date) FROM Price p2 WHERE p2.ticker = s.ticker
+                    SELECT MIN(p2.date) FROM Price p2 WHERE p2.ticker = s.ticker
                 )
                 ORDER BY p.marketCap DESC
             """)

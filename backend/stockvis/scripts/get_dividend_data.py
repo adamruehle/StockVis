@@ -3,9 +3,9 @@ import os
 import pandas as pd
 import csv
 import time 
-
-stock_list_path = 'all_stocks.csv'
-
+import requests
+import json
+import argparse
 
 def get_stocks(file_path):
     print(os.getcwd())
@@ -18,10 +18,10 @@ def get_stocks(file_path):
     stock_list = stock_df.index.to_list()
     return stock_list
 
-def get_dividend_data(stock_list):
+def get_dividend_data(stock_list, start_date = '2020-01-01', end_date = '2024-12-01'):
     dividend_data = []
-    start_date = '2020-01-01'
-    end_date = '2024-12-01'
+    start_date = start_date
+    end_date = end_date
     dates = pd.date_range(start=start_date, end= end_date)
     for symbol in stock_list:
         stock = yf.Ticker(symbol)
@@ -69,8 +69,22 @@ def save_dividends_to_file(dividends, filename):
         
     
 if __name__ == "__main__":
-    stocks = get_stocks(stock_list_path)
-    data = get_dividend_data(stocks)
-    save_dividends_to_file(data, 'all_dividends.csv')
+    parser = argparse.ArgumentParser(description='Get Dividend History for given tickers.')
+    parser.add_argument('tickers', help='List of stock tickers separated by +')
+    args = parser.parse_args()
+    
+    stock_tickers = args.tickers.split('+')
+    session = start_session()
+    data = extract_stock_prices(session, stock_tickers)
+    
+    # Format data as map instead of array
+    formatted_data = {
+        "stocks": data
+    }
+    print(json.dumps(formatted_data))
+    
+    #stocks = get_stocks(stock_list_path)
+    #data = get_dividend_data(stocks)
+    #save_dividends_to_file(data, 'all_dividends.csv')
     
     

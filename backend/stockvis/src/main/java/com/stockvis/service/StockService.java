@@ -1,6 +1,5 @@
 package com.stockvis.service;
 
-import com.stockvis.entity.PriceId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +35,7 @@ import java.util.HashSet;
 import java.io.File;
 import java.util.Iterator;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class StockService {
@@ -92,90 +92,75 @@ public class StockService {
         }
     }
 
-    public void populatePrices(List<String> tickers) {
+    // First create DTO for JSON structure
+    private static class StockPriceResponse {
+        public List<List<Object>> stocks; // Array of [ticker, datetime, price]
+    }
+
+    @Transactional
+    public void populatePrices(List<String> tickers, String range, String interval) {
         try {
-            String tickersString = tickers.stream()
-                    .map(ticker -> ticker)
-                    .collect(Collectors.joining("+"));
-            System.out.println(tickersString);
 
-            // Get the project root directory
-            String projectRoot = System.getProperty("user.dir");
-            // Construct path to Python script
-            File scriptFile = new File(projectRoot, "backend/stockvis/scripts/get_stock_prices.py").getAbsoluteFile();
-            if (!scriptFile.exists()) {
-                throw new RuntimeException("Python script not found at: " + scriptFile.getPath());
+            // for (String ticker : tickers) {
+            // System.out.println(ticker);
+            // }
+
+            Process process = executePythonScript(tickers, range, interval);
+            String jsonOutput = readProcessOutput(process);
+            System.out.println("JSON output: " + jsonOutput);
+            // Parse JSON to match array structure
+            ObjectMapper mapper = new ObjectMapper();
+            StockPriceResponse response = mapper.readValue(jsonOutput, StockPriceResponse.class);
+            for (List<Object> stockData : response.stocks) {
+                Price price = new Price();
+                price.setTicker((String) stockData.get(0));
+                price.setDate(LocalDateTime.parse((String) stockData.get(1),
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                price.setCurrentPrice(((Number) stockData.get(2)).doubleValue());
+                System.out.println(price.getTicker() + " " + price.getDate() + " " + price.getCurrentPrice());
+                priceRepository.save(price);
             }
 
-            ProcessBuilder processBuilder = new ProcessBuilder("python3", scriptFile.getPath(), tickersString);
-            // Set working directory to project root
-            processBuilder.directory(new File(projectRoot));
-
-            // Debug print command and arguments
-            System.out.println("Command: " + String.join(" ", processBuilder.command()));
-            System.out.println("Working directory: " + processBuilder.directory().getAbsolutePath());
-            System.out.println("Tickers: " + tickersString);
-
-            processBuilder.redirectErrorStream(true);
-            Process process = processBuilder.start();
-
-            // Read combined output
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            StringBuilder output = new StringBuilder();
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println("Python output: " + line); // Print output in real-time
-                output.append(line).append("\n");
+            if (response.stocks.size() > 0) {
+                System.out.println("Saved " + response.stocks.size() + " prices");
             }
 
-            int exitCode = process.waitFor();
-            System.out.println("Exit code: " + exitCode);
-            System.out.println("Final output: " + output.toString());
-
-            if (exitCode != 0) {
-                throw new RuntimeException("Python script failed with exit code: " + exitCode);
-            }
-
-            // Parse JSON data
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(output.toString());
-            List<Price> priceList = new ArrayList<>();
-            int counter = 0;
-
-            // Iterate through each field in the JSON object
-            Iterator<Map.Entry<String, JsonNode>> fields = rootNode.fields();
-            while (fields.hasNext()) {
-                Map.Entry<String, JsonNode> entry = fields.next();
-                String ticker = entry.getKey();
-                JsonNode priceData = entry.getValue();
-
-                for (JsonNode dataPoint : priceData) {
-                    String dateStr = dataPoint.get(1).asText();
-                    Double price = dataPoint.get(2).asDouble();
-
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                    LocalDateTime date = LocalDateTime.parse(dateStr, formatter);
-
-                    // Create Price object using setters
-                    Price priceEntity = new Price();
-                    priceEntity.setTicker(ticker);
-                    priceEntity.setDate(date);
-                    priceEntity.setCurrentPrice(price);
-
-                    priceList.add(priceEntity);
-                    counter++;
-                }
-            }
-
-            // Save any remaining records
-            if (!priceList.isEmpty()) {
-                priceRepository.saveAll(priceList);
-            }
-
-            System.out.println("Total prices processed: " + counter);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private Process executePythonScript(List<String> tickers, String range, String interval) throws IOException {
+        String tickersString = String.join("+", tickers);
+        String projectRoot = System.getProperty("user.dir");
+        File scriptFile = new File(projectRoot, "backend/stockvis/scripts/get_stock_prices.py").getAbsoluteFile();
+
+        if (!scriptFile.exists()) {
+            throw new RuntimeException("Python script not found at: " + scriptFile.getPath());
+        }
+
+        ProcessBuilder processBuilder = new ProcessBuilder("python3", scriptFile.getPath(), range, interval,
+                tickersString);
+        processBuilder.directory(new File(projectRoot));
+        processBuilder.redirectErrorStream(true);
+        return processBuilder.start();
+    }
+
+    private String readProcessOutput(Process process) throws IOException, InterruptedException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        StringBuilder output = new StringBuilder();
+        String line;
+
+        while ((line = reader.readLine()) != null) {
+            System.out.println("Python output: " + line);
+            output.append(line).append("\n");
+        }
+
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            throw new RuntimeException("Python script failed with exit code: " + exitCode);
+        }
+
+        return output.toString();
     }
 }

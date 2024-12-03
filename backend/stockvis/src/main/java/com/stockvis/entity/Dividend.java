@@ -2,28 +2,21 @@ package com.stockvis.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "dividend")
-@IdClass(PriceId.class)
+@IdClass(DividendId.class)
 public class Dividend {
 
     @Id
     @Column(name = "ticker")
-    private String ticker; // Acts as both part of the PK and a foreign key.
+    private String ticker;
 
     @Id
     @Column(name = "date")
     private LocalDate date;
 
-    @ManyToOne
-    @JoinColumn(name = "ticker", referencedColumnName = "ticker", insertable = false, updatable = false)
-    private Stock stock;
-
-    @Column(name = "dividend_per_share")
-    private Double dividendPerShare;
-
-    // Getters and Setters
     public String getTicker() {
         return ticker;
     }
@@ -40,19 +33,28 @@ public class Dividend {
         this.date = date;
     }
 
-    public Stock getStock() {
-        return stock;
+    public double getDividendAmount() {
+        return dividendAmount;
     }
 
-    public void setStock(Stock stock) {
-        this.stock = stock;
+    public void setDividendAmount(double dividendAmount) {
+        this.dividendAmount = dividendAmount;
     }
 
-    public Double getDividendPerShare() {
-        return dividendPerShare;
+    public double getDividendYield() {
+        return dividendYield;
     }
 
-    public void setDividendPerShare(Double dividendPerShare) {
-        this.dividendPerShare = dividendPerShare;
+    public void setDividendYield(double dividendYield) {
+        this.dividendYield = dividendYield;
     }
+
+    @ManyToOne
+    @JoinColumn(name = "ticker", referencedColumnName = "ticker", insertable = false, updatable = false)
+    private Stock stock;
+
+    private double dividendAmount;
+
+    private double dividendYield;
+
 }

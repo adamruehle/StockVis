@@ -87,7 +87,7 @@ def extract_data(data):
       continue  # Skip to the next stock
   return all_stock_data
 
-def extract_stock_prices(session, stock_tickers, range_param='1d', interval='1d', chunk_size=20):
+def extract_stock_prices(session, stock_tickers, range_param, interval, chunk_size=20):
   """
   Extract stock data for the given tickers over the specified date range and interval.
 
@@ -127,22 +127,24 @@ def extract_stock_prices(session, stock_tickers, range_param='1d', interval='1d'
     all_stock_data.extend(extracted_data)
   return all_stock_data
 
-def main(stock_tickers):
+def main(stock_tickers, range_param, interval):
   # Start a new session
   session = start_session()
   # Extract stock prices
-  all_stock_data = extract_stock_prices(session, stock_tickers, range_param='1d', interval='15m', chunk_size=20)
+  all_stock_data = extract_stock_prices(session, stock_tickers, range_param, interval, chunk_size=20)
   # Return the extracted stock prices
   return all_stock_data
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Get stock prices for given tickers.')
+    parser.add_argument('range', help='Range parameter for the API call (e.g., 1d, 5d, 1mo, 5y, etc.)')
+    parser.add_argument('interval', help='Interval parameter for the API call (e.g., 1d, 1wk, 1mo)')
     parser.add_argument('tickers', help='List of stock tickers separated by +')
     args = parser.parse_args()
     
     stock_tickers = args.tickers.split('+')
     session = start_session()
-    data = extract_stock_prices(session, stock_tickers)
+    data = extract_stock_prices(session, stock_tickers, args.range, args.interval, chunk_size=20)
     
     # Format data as map instead of array
     formatted_data = {
