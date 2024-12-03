@@ -23,24 +23,23 @@ def generate_data_url(tickers, range_param, interval):
           f"&range={range_param}&interval={interval}&indicators=close"
           "&includeTimestamps=true&includePrePost=false&corsDomain=finance.yahoo.com"
           "&.tsrc=finance")
-  # print(f"Requesting URL: {url}")
   return url
 
 def get_response(session, url):
   response = session.get(url)
   try:
     response.raise_for_status()
-    print("Response status code:", response.status_code)
+    # print("Response status code:", response.status_code)
     return response.json()
   except requests.exceptions.HTTPError as e:
-    print(f"HTTP error occurred: {e}")
-    print(f"Response status code: {response.status_code}")
-    print(f"Response text: {response.text}")
+    # print(f"HTTP error occurred: {e}")
+    # print(f"Response status code: {response.status_code}")
+    # print(f"Response text: {response.text}")
     return None
   except json.decoder.JSONDecodeError as e:
-    print(f"JSON decode error occurred: {e}")
-    print(f"Response status code: {response.status_code}")
-    print(f"Response text: {response.text}")
+    # print(f"JSON decode error occurred: {e}")
+    # print(f"Response status code: {response.status_code}")
+    # print(f"Response text: {response.text}")
     return None
 
 def get_all_stocks_from_file():
@@ -84,18 +83,11 @@ def extract_data(data):
       all_stock_data.append({'ticker': ticker, 'data': stock_entries})
       # print(f"Retrieved data for symbol: {ticker}")
     except Exception as e:
-      print(f"Error processing symbol {stock.get('symbol', 'Unknown')}: {e}")
+      # print(f"Error processing symbol {stock.get('symbol', 'Unknown')}: {e}")
       continue  # Skip to the next stock
   return all_stock_data
 
-def save_stock_prices(ticker_prices, filename='ticker_prices.csv'):
-  with open(filename, 'w', newline='') as file:
-    writer = csv.writer(file)
-    writer.writerow(['Ticker', 'Price'])  # Write header
-    for ticker, price in ticker_prices.items():
-      writer.writerow([ticker, price])
-
-def extract_stock_prices(session, stock_tickers, range_param='1d', interval='1d', chunk_size=20):
+def extract_stock_prices(session, stock_tickers, range_param, interval, chunk_size=20):
   """
   Extract stock data for the given tickers over the specified date range and interval.
 
@@ -110,58 +102,55 @@ def extract_stock_prices(session, stock_tickers, range_param='1d', interval='1d'
   - all_stock_data: A list containing the extracted data for all tickers.
   """
   all_stock_data = []
-
-  # Prepare the output CSV file
-  output_file = "stockvis/scripts/stock_prices.csv"
-  with open(output_file, 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow(['Ticker', 'Datetime', 'Price'])  # Write the header
-    # Process tickers in chunks
-    split_stock_tickers_list = [
-      stock_tickers[i:i + chunk_size] for i in range(0, len(stock_tickers), chunk_size)
-    ]
-    for tickers in split_stock_tickers_list:
-      print(tickers)
-      # Generate API URL
-      url = generate_data_url(tickers, range_param, interval)
-      data = get_response(session, url)
-      extracted_data = []
-      # Parse the API response
-      if data and 'spark' in data and 'result' in data['spark']:
-        for stock in data['spark']['result']:
-          ticker = stock.get('symbol', 'Unknown')
-          responses = stock.get('response', [])
-          for resp in responses:
-            timestamps = resp.get('timestamp', [])
-            quotes = resp.get('indicators', {}).get('quote', [{}])[0].get('close', [])
-            # Extract and format data
-            for ts, price in zip(timestamps, quotes):
-              # Convert timestamp to datetime
-              date_time = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-              extracted_data.append([ticker, date_time, price])
-      # Append to all_stock_data and write to CSV
-      all_stock_data.extend(extracted_data)
-      writer.writerows(extracted_data)
-  print(f"Data written to {output_file}")
-  print(f"Total stocks retrieved: {len(all_stock_data)}")
+  split_stock_tickers_list = [
+    stock_tickers[i:i + chunk_size] for i in range(0, len(stock_tickers), chunk_size)
+  ]
+  for tickers in split_stock_tickers_list:
+    # Generate API URL
+    url = generate_data_url(tickers, range_param, interval)
+    data = get_response(session, url)
+    extracted_data = []
+    # Parse the API response
+    if data and 'spark' in data and 'result' in data['spark']:
+      for stock in data['spark']['result']:
+        ticker = stock.get('symbol', 'Unknown')
+        responses = stock.get('response', [])
+        for resp in responses:
+          timestamps = resp.get('timestamp', [])
+          quotes = resp.get('indicators', {}).get('quote', [{}])[0].get('close', [])
+          # Extract and format data
+          for ts, price in zip(timestamps, quotes):
+            # Convert timestamp to datetime
+            date_time = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+            extracted_data.append([ticker, date_time, price])
+    # Append to all_stock_data and write to CSV
+    all_stock_data.extend(extracted_data)
   return all_stock_data
 
-def main(stock_tickers):
+def main(stock_tickers, range_param, interval):
   # Start a new session
   session = start_session()
   # Extract stock prices
-  all_stock_data = extract_stock_prices(session, stock_tickers, range_param='1d', interval='1d', chunk_size=20)
+  all_stock_data = extract_stock_prices(session, stock_tickers, range_param, interval, chunk_size=20)
   # Return the extracted stock prices
   return all_stock_data
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser(description='Get stock prices for given tickers.')
-  parser.add_argument('tickers', nargs='+', help='List of stock tickers')
-  args = parser.parse_args()
-  # Extract stock data
-  all_stock_data = main(args.tickers)
-  # Print the data as JSON
-  print(json.dumps(all_stock_data))
+    parser = argparse.ArgumentParser(description='Get stock prices for given tickers.')
+    parser.add_argument('range', help='Range parameter for the API call (e.g., 1d, 5d, 1mo, 5y, etc.)')
+    parser.add_argument('interval', help='Interval parameter for the API call (e.g., 1d, 1wk, 1mo)')
+    parser.add_argument('tickers', help='List of stock tickers separated by +')
+    args = parser.parse_args()
+    
+    stock_tickers = args.tickers.split('+')
+    session = start_session()
+    data = extract_stock_prices(session, stock_tickers, args.range, args.interval, chunk_size=20)
+    
+    # Format data as map instead of array
+    formatted_data = {
+        "stocks": data
+    }
+    print(json.dumps(formatted_data))
 
   # # Get all stock tickers
   # stock_tickers = get_all_stocks_from_file()

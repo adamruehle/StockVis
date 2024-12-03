@@ -20,6 +20,9 @@ export default function Home() {
                 <Link href="/stocks" className="hover:text-white">Stock Data</Link>
               </li>
               <li>
+                <Link href="/macro" className="hover:text-white">Economic Data</Link>
+              </li>
+              <li>
                 <Link href="/insights" className="hover:text-white">Filter & Insights</Link>
               </li>
             </ul>

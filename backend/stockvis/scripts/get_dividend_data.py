@@ -3,6 +3,12 @@ import os
 import pandas as pd
 import csv
 import time 
+<<<<<<< HEAD
+=======
+import requests
+import json
+import argparse
+>>>>>>> 2d53a9c163494887d0908a2075cfd7ce6e940086
 
 def get_stocks(file_path):
     print(os.getcwd())
@@ -67,8 +73,22 @@ def save_dividends_to_file(dividends, filename):
         
     
 if __name__ == "__main__":
-    stocks = get_stocks(stock_list_path)
-    data = get_dividend_data(stocks)
-    save_dividends_to_file(data, 'all_dividends.csv')
+    parser = argparse.ArgumentParser(description='Get Dividend History for given tickers.')
+    parser.add_argument('tickers', help='List of stock tickers separated by +')
+    args = parser.parse_args()
+    
+    stock_tickers = args.tickers.split('+')
+    session = start_session()
+    data = extract_stock_prices(session, stock_tickers)
+    
+    # Format data as map instead of array
+    formatted_data = {
+        "stocks": data
+    }
+    print(json.dumps(formatted_data))
+    
+    #stocks = get_stocks(stock_list_path)
+    #data = get_dividend_data(stocks)
+    #save_dividends_to_file(data, 'all_dividends.csv')
     
     

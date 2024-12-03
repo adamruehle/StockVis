@@ -7,10 +7,9 @@ import java.util.List;
 @Table(name = "company")
 public class Company {
 
-
-
     @Id
     private String name;
+
     private String sector;
     private String industry;
     private String headquarters;
@@ -21,12 +20,6 @@ public class Company {
 
     @OneToMany(mappedBy = "name", cascade = CascadeType.ALL)
     private List<CompanyFinancial> companyFinancials;
-
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
-    private List<BalanceSheet> balanceSheets;
-
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
-    private List<IncomeStatement> incomeStatements;
 
     public String getName() {
         return name;

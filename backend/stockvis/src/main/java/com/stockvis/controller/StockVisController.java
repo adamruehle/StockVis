@@ -1,13 +1,17 @@
 package com.stockvis.controller;
 
+import com.stockvis.entity.EconomicData;
 import com.stockvis.entity.Price;
 import com.stockvis.entity.Stock;
+import com.stockvis.service.DividendService;
+import com.stockvis.service.MacroService;
 import com.stockvis.service.PriceService;
 import com.stockvis.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,17 +27,58 @@ public class StockVisController {
 
     @Autowired
     private PriceService priceService;
+
+    @Autowired
+    private MacroService macroService;
+
+    @Autowired
+    private DividendService dividendService;
+
     @GetMapping(value = "/hello")
     public ResponseEntity<String> hello() {
         // Replace with actual logic to fetch and return stocks
         return ResponseEntity.ok("Hello World!");
     }
 
-    @GetMapping(value = "/getTopMarketCaps")
-    public ResponseEntity<List<Price>> getTopPrices(@RequestParam(defaultValue = "10") int limit) {
+    @GetMapping(value = "/getStocks")
+    public ResponseEntity<List<Stock>> getStocks(@RequestParam(defaultValue = "") String tickerString) {
         try {
-            List<Price> prices = priceService.getTopPrices(limit);
+            List<Stock> stocks = stockService.getStocks(tickerString);
+            return ResponseEntity.ok(stocks);
+        } catch (Exception e) {
+            // Log the exception (consider using a logger)
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    @GetMapping(value = "/getTopStocks")
+    public ResponseEntity<List<Price>> getTopStocks(@RequestParam(defaultValue = "10") int limit) {
+        try {
+            List<Price> prices = priceService.getTopMarketCaps(limit);
             return ResponseEntity.ok(prices);
+        } catch (Exception e) {
+            // Log the exception (consider using a logger)
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    @GetMapping(value = "/getTopStocksByExchange")
+    public ResponseEntity<List<Price>> getTopStocksByExchange(@RequestParam(defaultValue = "10") int limit,
+            @RequestParam String exchange) {
+        try {
+            List<Price> prices = priceService.getTopMarketCapsByExchange(limit, exchange);
+            return ResponseEntity.ok(prices);
+        } catch (Exception e) {
+            // Log the exception (consider using a logger)
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    @GetMapping(value = "/getEconomicData")
+    public ResponseEntity<List<EconomicData>> getEconomicData() {
+        try {
+            List<EconomicData> economicData = macroService.getEconomicData();
+            return ResponseEntity.ok(economicData);
         } catch (Exception e) {
             // Log the exception (consider using a logger)
             return ResponseEntity.status(500).body(null);
@@ -52,20 +97,27 @@ public class StockVisController {
     }
 
     @PostMapping(value = "/populatePrices")
-    public ResponseEntity<String> populatePrices() {
+    public ResponseEntity<String> populatePrices(@RequestParam List<String> tickers,
+            @RequestParam List<String> dateRange, @RequestParam String interval) {
         try {
-            stockService.populatePrices();
+            stockService.populatePrices(tickers, "1d", "1d");
             return ResponseEntity.ok("Stock Prices populated successfully!");
         } catch (Exception e) {
             // Log the exception (consider using a logger)
             return ResponseEntity.status(500).body("Failed to populate stocks prices: " + e.getMessage());
         }
     }
-    
+
     @PostMapping(value = "/populateTopPrices")
     public ResponseEntity<String> populateTopPrices(@RequestParam(defaultValue = "100") int limit) {
         try {
-            stockService.populatePrices(limit);
+            List<Price> tickers = priceService.getTopMarketCaps(limit);
+
+            List<String> tickerStrings = new ArrayList<String>();
+            for (Price price : tickers) {
+                tickerStrings.add(price.getTicker());
+            }
+            stockService.populatePrices(tickerStrings, "1d", "30");
             return ResponseEntity.ok("Top " + limit + " stock prices populated successfully!");
         } catch (Exception e) {
             // Log the exception (consider using a logger)
@@ -73,7 +125,27 @@ public class StockVisController {
         }
     }
 
-    @PostMapping(value = "/populateMarketCaps") 
+    @PostMapping(value = "/populateMacroData")
+    public ResponseEntity<String> populateMacroData() {
+        try {
+            macroService.populateMacroData();
+            return ResponseEntity.ok("Macro Data populated successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Failed to populate macro data: " + e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/populateDividendData")
+    public ResponseEntity<String> populateDividendData() {
+        try {
+            dividendService.populateDividendData();
+            return ResponseEntity.ok("Dividend Data populated successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Failed to populate dividend data: " + e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/populateMarketCaps")
     public ResponseEntity<String> populateMarketCaps() {
         try {
             priceService.populateMarketCaps();
@@ -82,6 +154,5 @@ public class StockVisController {
             return ResponseEntity.status(500).body("Failed to populate stocks prices: " + e.getMessage());
         }
     }
-
 
 }

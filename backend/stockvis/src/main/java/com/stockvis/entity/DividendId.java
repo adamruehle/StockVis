@@ -1,20 +1,19 @@
 package com.stockvis.entity;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Objects;
 
-public class PriceId implements Serializable {
-
+public class DividendId implements Serializable {
     private String ticker;
-    private LocalDateTime date;
+    private LocalDate date;
 
     // Default constructor
-    public PriceId() {
+    public DividendId() {
     }
 
     // Constructor
-    public PriceId(String ticker, LocalDateTime date) {
+    public DividendId(String ticker, LocalDate date) {
         this.ticker = ticker;
         this.date = date;
     }
@@ -28,11 +27,11 @@ public class PriceId implements Serializable {
         this.ticker = ticker;
     }
 
-    public LocalDateTime getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(LocalDateTime date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 
@@ -43,8 +42,8 @@ public class PriceId implements Serializable {
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        PriceId priceId = (PriceId) o;
-        return ticker.equals(priceId.ticker) && date.equals(priceId.date);
+        DividendId dividendId = (DividendId) o;
+        return ticker.equals(dividendId.ticker) && date.equals(dividendId.date);
     }
 
     @Override

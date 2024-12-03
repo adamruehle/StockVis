@@ -29,7 +29,7 @@ def get_all_stocks():
   # Initialize variables
   stocks = []
   pageNumber = 1
-  maxResultsPerPage = 10000  # Adjust as needed (max is typically 100)
+  maxResultsPerPage = 10  # Adjust as needed (max is typically 100)
   total_results = None
   unique_tickers = set()
   # Loop to retrieve all pages, though there should only be one page with
