@@ -24,6 +24,7 @@ def get_dividend_data(stock_list, start_date = '2020-01-01', end_date = '2024-12
     end_date = end_date
     dates = pd.date_range(start=start_date, end= end_date)
     for symbol in stock_list:
+        dividends = []
         stock = yf.Ticker(symbol)
         dividends = stock.dividends
         dividends.index = pd.to_datetime(dividends.index)
