@@ -3,12 +3,9 @@ import os
 import pandas as pd
 import csv
 import time 
-<<<<<<< HEAD
-=======
 import requests
 import json
 import argparse
->>>>>>> 2d53a9c163494887d0908a2075cfd7ce6e940086
 
 def get_stocks(file_path):
     print(os.getcwd())

@@ -23,6 +23,17 @@ StockVis is a web application designed to provide users with insights into the s
    ```bash
    git clone https://github.com/your-repo/stockvis.git
 
+2. Set up Python Environment
+   ```bash
+   python -m venv pyenv
+
+## On Linux
+   source pyenv/bin/activate
+## On Windows
+   .venv\Scripts\activate
+
+   pip install -r requirements.txt
+
 ## Features
 <img width="678" alt="Screenshot 2024-11-14 at 4 44 48 PM" src="https://github.com/user-attachments/assets/a38ccdfe-8c38-44d8-9859-120a1e9989d3">
 <img width="1078" alt="Screenshot 2024-11-14 at 4 45 01 PM" src="https://github.com/user-attachments/assets/d89d87dc-7588-4fa5-a27b-61b86913bd03">
