@@ -1,5 +1,6 @@
 package com.stockvis.controller;
 
+import com.stockvis.entity.CompanyFinancial;
 import com.stockvis.entity.Dividend;
 import com.stockvis.entity.EconomicData;
 import com.stockvis.entity.Price;
@@ -8,6 +9,8 @@ import com.stockvis.service.DividendService;
 import com.stockvis.service.MacroService;
 import com.stockvis.service.PriceService;
 import com.stockvis.service.StockService;
+import com.stockvis.service.CompanyService;
+import com.stockvis.service.CompanyFinancialService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +37,12 @@ public class StockVisController {
 
     @Autowired
     private DividendService dividendService;
+
+    @Autowired
+    private CompanyFinancialService companyFinancialService;
+
+    @Autowired
+    private CompanyService companyService;
 
     @GetMapping(value = "/hello")
     public ResponseEntity<String> hello() {
@@ -75,6 +84,18 @@ public class StockVisController {
         }
     }
 
+    @GetMapping(value = "/getTopStocksBySector")
+    public ResponseEntity<List<Price>> getTopStocksBySector(
+            @RequestParam String sector,
+            @RequestParam(defaultValue = "10") int limit) {
+        try {
+            List<Price> prices = priceService.getTopStocksBySector(limit, sector);
+            return ResponseEntity.ok(prices);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
     @GetMapping(value = "/getStockPrices")
     public ResponseEntity<List<Price>> getStockPrices(@RequestParam(defaultValue = "") String ticker) {
         try {
@@ -104,6 +125,20 @@ public class StockVisController {
         }
     }
 
+    @GetMapping(value = "/getCompanyFinancials")
+    public ResponseEntity<List<CompanyFinancial>> getCompanyFinancials(@RequestParam(defaultValue = "") String ticker) {
+        try {
+
+            companyFinancialService.saveCompanyFinancials(ticker);
+            List<CompanyFinancial> companyFinancials = companyFinancialService.getCompanyFinancials(ticker);
+            return ResponseEntity.ok(companyFinancials);
+        } catch (Exception e) {
+            // Log the exception (consider using a logger)
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
     @GetMapping(value = "/getEconomicData")
     public ResponseEntity<List<EconomicData>> getEconomicData() {
         try {
@@ -111,6 +146,16 @@ public class StockVisController {
             return ResponseEntity.ok(economicData);
         } catch (Exception e) {
             // Log the exception (consider using a logger)
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    @GetMapping(value = "/getSectors")
+    public ResponseEntity<List<String>> getSectors() {
+        try {
+            List<String> sectors = companyService.getUniqueSectors();
+            return ResponseEntity.ok(sectors);
+        } catch (Exception e) {
             return ResponseEntity.status(500).body(null);
         }
     }
@@ -182,6 +227,16 @@ public class StockVisController {
             return ResponseEntity.ok("Market Caps populated successfully!");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Failed to populate stocks prices: " + e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/populateCompanies")
+    public ResponseEntity<String> populateCompanies() {
+        try {
+            companyService.populateCompanies();
+            return ResponseEntity.ok("Companies populated successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Failed to populate companies: " + e.getMessage());
         }
     }
 

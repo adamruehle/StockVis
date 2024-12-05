@@ -77,8 +77,20 @@ public class PriceService {
         return priceRepository.findTopStocksByMarketCap(pageRequest, exchange);
     }
 
+    public List<Price> getTopMarketCapsBySector(int limit, String sector) {
+
+        Pageable pageRequest = PageRequest.of(0, limit);
+        return priceRepository.findTopStocksByMarketCap(pageRequest, sector);
+    }
+
     public List<Price> getStockPrices(String ticker) {
         return priceRepository.findByTicker(ticker);
+    }
+
+    public List<Price> getTopStocksBySector(int limit, String sector) {
+        Pageable pageRequest = PageRequest.of(0, limit);
+        List<Price> results = priceRepository.findTopStocksBySector(pageRequest, sector);
+        return results;
     }
 
 }
