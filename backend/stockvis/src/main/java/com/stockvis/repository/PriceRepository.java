@@ -19,23 +19,51 @@ public interface PriceRepository extends JpaRepository<Price, PriceId> {
     List<PriceId> findPriceIdsByTickers(@Param("tickers") List<String> tickers);
 
     @Query("""
-                SELECT p FROM Price p
-                JOIN Stock s ON s.ticker = p.ticker
-                WHERE p.date = (
-                    SELECT MIN(p2.date) FROM Price p2 WHERE p2.ticker = s.ticker
-                )
-                ORDER BY p.marketCap DESC
+            SELECT p FROM Price p
+            JOIN Stock s ON s.ticker = p.ticker
+            WHERE p.date = (
+                    SELECT MAX(p2.date)
+                    FROM Price p2
+                    WHERE p2.stock = s
+            )
+            AND s IN (
+                SELECT p3.stock
+                FROM Price p3
+                WHERE p3.marketCap IS NOT NULL
+            )
+            ORDER BY (
+                SELECT p4.marketCap
+                FROM Price p4
+                WHERE p4.stock = s
+                  AND p4.marketCap IS NOT NULL
+                ORDER BY p4.marketCap DESC
+                LIMIT 1
+            ) DESC
             """)
     List<Price> findTopStocksByMarketCap(Pageable pageRequest);
 
     @Query("""
-                SELECT p FROM Price p
-                JOIN Stock s ON s.ticker = p.ticker
-                WHERE p.date = (
-                    SELECT MIN(p2.date) FROM Price p2 WHERE p2.ticker = s.ticker
+            SELECT p FROM Price p
+            JOIN Stock s ON s.ticker = p.ticker
+            WHERE p.date = (
+                SELECT MAX(p2.date)
+                FROM Price p2
+                WHERE p2.stock = s
                 )
-                AND s.exchange = :exchange
-                ORDER BY p.marketCap DESC
+            AND s.exchange = :exchange
+            AND s IN (
+                SELECT p3.stock
+                FROM Price p3
+                WHERE p3.marketCap IS NOT NULL
+            )
+            ORDER BY (
+                SELECT p4.marketCap
+                FROM Price p4
+                WHERE p4.stock = s
+                  AND p4.marketCap IS NOT NULL
+                ORDER BY p4.marketCap DESC
+                LIMIT 1
+            ) DESC
             """)
     List<Price> findTopStocksByMarketCap(Pageable pageRequest, @Param("exchange") String exchange);
 
