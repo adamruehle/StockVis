@@ -134,6 +134,7 @@ public class StockVisController {
             return ResponseEntity.ok(companyFinancials);
         } catch (Exception e) {
             // Log the exception (consider using a logger)
+            e.printStackTrace();
             return ResponseEntity.status(500).body(null);
         }
     }

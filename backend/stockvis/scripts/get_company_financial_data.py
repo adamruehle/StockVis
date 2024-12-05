@@ -40,7 +40,7 @@ def get_company_financial_data(stock_ticker, api_key):
 
 # Example usage
 if __name__ == "__main__":
-    API_KEY = "6MMXPI0RHTPW9OK1"
+    API_KEY = "8ON6I3YJ2Y1ASEN0"
     parser = argparse.ArgumentParser(description='Get company financial data for given ticker.')
     parser.add_argument('ticker', help='Stock ticker symbol')
     args = parser.parse_args()
@@ -53,6 +53,7 @@ if __name__ == "__main__":
     # private Double targetPrice;
     
     data = get_company_financial_data(args.ticker, API_KEY)
+
     # Only get these values
     edited_data = {
         "date": data.get("LatestQuarter"),

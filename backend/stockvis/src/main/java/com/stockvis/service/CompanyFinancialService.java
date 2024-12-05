@@ -34,9 +34,14 @@ public class CompanyFinancialService {
 
     public void saveCompanyFinancials(String ticker) {
         try {
+            
+            if (CompanyFinancialRepository.findByName(stockRepository.findById(ticker).orElse(null).getCompany().getName()).size() > 0) {
+                System.out.println("Company Financials already exist for " + ticker);
+                return;
+            }
             Process process = executePythonScript(ticker);
             String jsonOutput = readProcessOutput(process);
-
+              
             CompanyFinancial companyFinancial = new CompanyFinancial();
             ObjectMapper mapper = new ObjectMapper();
             JsonNode rootNode = mapper.readTree(jsonOutput);

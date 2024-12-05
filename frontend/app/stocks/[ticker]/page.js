@@ -88,10 +88,10 @@ export default function StockDetails({ params }) {
           setError(err.message);
         }
       }
-
-      fetchCompanyFinancials();
+      
       fetchStockData();
       fetchDividendData();
+      fetchCompanyFinancials();
     }
   }, [ticker]);
 
