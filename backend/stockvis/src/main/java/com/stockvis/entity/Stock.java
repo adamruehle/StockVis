@@ -17,8 +17,6 @@ public class Stock {
 
     private String exchange;
 
-
-
     @OneToMany(mappedBy = "stock", cascade = CascadeType.ALL)
     private List<Price> prices;
 
@@ -33,8 +31,8 @@ public class Stock {
         this.ticker = ticker;
     }
 
-    public String getCompany() {
-        return company.getName();
+    public Company getCompany() {
+        return company;
     }
 
     public void setCompany(Company company) {

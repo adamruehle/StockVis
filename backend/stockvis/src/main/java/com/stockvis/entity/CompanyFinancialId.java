@@ -10,7 +10,8 @@ public class CompanyFinancialId implements Serializable {
     private LocalDate date;
 
     // Default constructor
-    public CompanyFinancialId() {}
+    public CompanyFinancialId() {
+    }
 
     // Constructor
     public CompanyFinancialId(String name, LocalDate date) {
@@ -38,8 +39,10 @@ public class CompanyFinancialId implements Serializable {
     // equals() and hashCode()
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         CompanyFinancialId that = (CompanyFinancialId) o;
         return name.equals(that.name) && date.equals(that.date);
     }
