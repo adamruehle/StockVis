@@ -34,6 +34,14 @@ StockVis is a web application designed to provide users with insights into the s
 
    pip install -r requirements.txt
 
+## Running the Application
+
+You can use the provided Makefile to manage the application. The Makefile includes commands to install dependencies, run the application, and clean build files.
+It will work with both linux and windows.
+To install the dependencies, run 'make install'. To run the application,
+run 'make run' in the terminal.
+
+```
 ## Features
 <img width="678" alt="Screenshot 2024-11-14 at 4 44 48 PM" src="https://github.com/user-attachments/assets/a38ccdfe-8c38-44d8-9859-120a1e9989d3">
 <img width="1078" alt="Screenshot 2024-11-14 at 4 45 01 PM" src="https://github.com/user-attachments/assets/d89d87dc-7588-4fa5-a27b-61b86913bd03">
