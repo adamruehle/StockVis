@@ -9,16 +9,14 @@ public class Company {
 
     @Id
     private String name;
-
     private String sector;
     private String industry;
     private String headquarters;
-    private Integer foundedYear;
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
     private List<Stock> stocks;
 
-    @OneToMany(mappedBy = "name", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
     private List<CompanyFinancial> companyFinancials;
 
     public String getName() {
@@ -53,11 +51,4 @@ public class Company {
         this.headquarters = headquarters;
     }
 
-    public Integer getFoundedYear() {
-        return foundedYear;
-    }
-
-    public void setFoundedYear(Integer foundedYear) {
-        this.foundedYear = foundedYear;
-    }
 }

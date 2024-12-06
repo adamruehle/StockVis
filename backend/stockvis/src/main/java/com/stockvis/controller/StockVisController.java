@@ -17,12 +17,15 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import com.stockvis.entity.Company;
 
 /**
  * StockVisController handles API requests for stock-related operations.
  */
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api")
 public class StockVisController {
 
@@ -160,6 +163,22 @@ public class StockVisController {
         }
     }
 
+    @GetMapping("/companies/{ticker}")
+    public ResponseEntity<Map<String, Object>> getCompanyByTicker(@PathVariable String ticker) {
+        Company company = companyService.getCompanyByTicker(ticker);
+        if (company == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("name", company.getName());
+        response.put("sector", company.getSector());
+        response.put("industry", company.getIndustry());
+        response.put("headquarters", company.getHeadquarters());
+
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping(value = "/populateStocks")
     public ResponseEntity<String> populateStocks() {
         try {
@@ -237,6 +256,16 @@ public class StockVisController {
             return ResponseEntity.ok("Companies populated successfully!");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Failed to populate companies: " + e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/populateFinancialData")
+    public ResponseEntity<String> populateFinancialData() {
+        try {
+            companyFinancialService.populateFinancialDataFromCSV();
+            return ResponseEntity.ok("Financial data populated successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Failed to populate financial data: " + e.getMessage());
         }
     }
 

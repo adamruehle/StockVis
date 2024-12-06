@@ -70,6 +70,14 @@ public class CompanyService {
         }
     }
 
+    public Company getCompanyByTicker(String ticker) {
+        Stock stock = stockRepository.findById(ticker).orElse(null);
+        if (stock == null) {
+            return null;
+        }
+        return stock.getCompany();
+    }
+
     public List<String> getUniqueSectors() {
         try {
             List<String> sectors = companyRepository.findDistinctSectors();

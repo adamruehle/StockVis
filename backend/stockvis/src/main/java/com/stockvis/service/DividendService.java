@@ -110,10 +110,22 @@ public class DividendService {
             throw new RuntimeException("Python script not found at: " + scriptFile.getPath());
         }
 
-        ProcessBuilder processBuilder = new ProcessBuilder("python3", scriptFile.getPath(), tickersString);
-        processBuilder.directory(new File(projectRoot));
-        processBuilder.redirectErrorStream(true);
-        return processBuilder.start();
+        // Try different Python commands
+        String[] possiblePythonCommands = {"python", "python3", "py"};
+        
+        for (String pythonCommand : possiblePythonCommands) {
+            try {
+                ProcessBuilder processBuilder = new ProcessBuilder(pythonCommand, scriptFile.getPath(), tickersString);
+                processBuilder.directory(new File(projectRoot));
+                processBuilder.redirectErrorStream(true);
+                return processBuilder.start();
+            } catch (IOException e) {
+                continue;
+            }
+        }
+
+        // If none of the commands worked
+        throw new RuntimeException("Python not found. Please ensure Python is installed and in your system PATH.");
     }
 
     private String readProcessOutput(Process process) throws IOException, InterruptedException {

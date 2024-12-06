@@ -136,11 +136,6 @@ export default function StockData() {
                   Economic Data
                 </Link>
               </li>
-              <li>
-                <Link href="/insights" className="hover:text-white">
-                  Filter & Insights
-                </Link>
-              </li>
             </ul>
           </nav>
         </div>

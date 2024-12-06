@@ -38,11 +38,29 @@ public class StockService {
 
     public void populateStocks() {
         try {
-            // Call Python script to retrieve stocks
-            ProcessBuilder processBuilder = new ProcessBuilder("python3", "stockvis/scripts/get_all_stocks.py");
-            Process process = processBuilder.start();
-            process.waitFor(); // Wait for the script to finish
+            String projectRoot = System.getProperty("user.dir");
+            File scriptFile = new File(projectRoot, "stockvis/scripts/get_all_stocks.py").getAbsoluteFile();
+            
+            // Try different Python commands
+            String[] possiblePythonCommands = {"python", "python3", "py"};
+            Process process = null;
+            
+            for (String pythonCommand : possiblePythonCommands) {
+                try {
+                    ProcessBuilder processBuilder = new ProcessBuilder(pythonCommand, scriptFile.getPath());
+                    processBuilder.directory(new File(projectRoot));
+                    process = processBuilder.start();
+                    break;
+                } catch (IOException e) {
+                    continue;
+                }
+            }
+            
+            if (process == null) {
+                throw new RuntimeException("Python not found. Please ensure Python is installed and in your system PATH.");
+            }
 
+            process.waitFor();
             // Now process the generated CSV
             String filePath = "stockvis/scripts/all_stocks.csv";
             BufferedReader reader = new BufferedReader(new FileReader(filePath));
@@ -123,11 +141,23 @@ public class StockService {
             throw new RuntimeException("Python script not found at: " + scriptFile.getPath());
         }
 
-        ProcessBuilder processBuilder = new ProcessBuilder("python3", scriptFile.getPath(), range, interval,
-                tickersString);
-        processBuilder.directory(new File(projectRoot));
-        processBuilder.redirectErrorStream(true);
-        return processBuilder.start();
+        // Try different Python commands
+        String[] possiblePythonCommands = {"python", "python3", "py"};
+        ProcessBuilder processBuilder = null;
+        
+        for (String pythonCommand : possiblePythonCommands) {
+            try {
+                processBuilder = new ProcessBuilder(pythonCommand, scriptFile.getPath(), range, interval, tickersString);
+                processBuilder.directory(new File(projectRoot));
+                processBuilder.redirectErrorStream(true);
+                return processBuilder.start();
+            } catch (IOException e) {
+                continue;
+            }
+        }
+
+        // If none of the commands worked
+        throw new RuntimeException("Python not found. Please ensure Python is installed and in your system PATH.");
     }
 
     private String readProcessOutput(Process process) throws IOException, InterruptedException {

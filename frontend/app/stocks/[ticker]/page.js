@@ -16,6 +16,7 @@ export default function StockDetails({ params }) {
   const [dividendData, setDividendData] = useState([]); // State for dividend data
   const [financialData, setFinancialData] = useState([]); // State for financial data
   const [error, setError] = useState(null); // State for error handling
+  const [companyData, setCompanyData] = useState(null); // Add state for company data
 
   useEffect(() => {
     // Unwrap `params` using `React.use()` or set the ticker directly if params is resolved
@@ -63,6 +64,8 @@ export default function StockDetails({ params }) {
           }
           const data = await res.json();
           setDividendData(data); 
+          console.log("Dividend Data");
+          console.log(data);
         } catch (err) {
           console.error(err);
           setError(err.message);
@@ -83,15 +86,38 @@ export default function StockDetails({ params }) {
           const data = await res.json();
           setFinancialData(data);
           console.log(data);
+          console.log("--------------------");
+          console.log(data[0].beta);
         } catch (err) {
           console.error(err);
           setError(err.message);
         }
       }
-      
+
+      // Add company data fetch
+      const fetchCompanyData = async () => {
+        try {
+          const res = await fetch(
+            `http://localhost:8080/api/companies/${ticker}`,
+            {
+              cache: "no-store",
+            }
+          );
+          if (!res.ok) {
+            throw new Error("Error fetching company data");
+          }
+          const data = await res.json();
+          setCompanyData(data);
+        } catch (err) {
+          console.error(err);
+          setError(err.message);
+        }
+      };
+
       fetchStockData();
       fetchDividendData();
       fetchCompanyFinancials();
+      fetchCompanyData(); // Add new fetch call
     }
   }, [ticker]);
 
@@ -224,8 +250,8 @@ export default function StockDetails({ params }) {
       </header>
       <main className="p-14">
         <div className="flex justify-between">
-          <h1 className="font-bold text-5xl">{stockData.company.name}</h1>
-          <h1 className="font-bold text-5xl">{stockData.ticker}</h1>
+          <h1 className="font-bold text-5xl">{companyData?.name || 'N/A'}</h1>
+          <h1 className="font-bold text-5xl">{stockData?.ticker}</h1>
         </div>
         <p className="mt-4 text-4xl">
           $
@@ -258,50 +284,48 @@ export default function StockDetails({ params }) {
           <div>
             <h1 className="text-3xl font-bold my-5">Company Wide Financials</h1>
             <div className="overflow-x-auto">
-              <table className="min-w-full text-xl inline-block w rounded-lg overflow-hidden">
-                <tbody>
-                  <tr className="border-b border-accent">
-                    <td className="py-3 px-6 font-semibold">Founded Year</td>
-                    <td className="py-3 px-6">{financialData[0].company?.foundedYear || 'N/A'}</td>
-                  </tr>
-                  <tr className="border-b border-accent">
-                    <td className="py-3 px-6 font-semibold">Headquarters</td>
-                    <td className="py-3 px-6">{financialData[0].company?.headquarters || 'N/A'}</td>
-                  </tr>
-                  <tr className="border-b border-accent">
-                    <td className="py-3 px-6 font-semibold">Industry</td>
-                    <td className="py-3 px-6">{financialData[0].company?.industry || 'N/A'}</td>
-                  </tr>
-                  <tr className="border-b border-accent">
-                    <td className="py-3 px-6 font-semibold">Sector</td>
-                    <td className="py-3 px-6">{financialData[0].company?.sector || 'N/A'}</td>
-                  </tr>
-                  <tr className="border-b border-accent">
-                    <td className="py-3 px-6 font-semibold">Beta</td>
-                    <td className="py-3 px-6">{financialData[0].beta}</td>
-                  </tr>
-                  <tr className="border-b border-accent">
-                    <td className="py-3 px-6 font-semibold">Earnings Per Share</td>
-                    <td className="py-3 px-6">${financialData[0].earningsPerShare}</td>
-                  </tr>
-                  <tr className="border-b border-accent">
-                    <td className="py-3 px-6 font-semibold">EBITDA</td>
-                    <td className="py-3 px-6">${(financialData[0].ebitda / 1000000000).toFixed(2)}B</td>
-                  </tr>
-                  <tr className="border-b border-accent">
-                    <td className="py-3 px-6 font-semibold">Profit Margin</td>
-                    <td className="py-3 px-6">{(financialData[0].profitMargin * 100).toFixed(2)}%</td>
-                  </tr>
-                  <tr className="border-b border-accent">
-                    <td className="py-3 px-6 font-semibold">Revenue</td>
-                    <td className="py-3 px-6">${(financialData[0].revenue / 1000000000).toFixed(2)}B</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 px-6 font-semibold">Target Price</td>
-                    <td className="py-3 px-6">${financialData[0].targetPrice}</td>
-                  </tr>
-                </tbody>
-              </table>
+              {financialData && financialData.length > 0 && (
+                <table className="w-full">
+                  <tbody>
+                    <tr className="border-b border-accent">
+                      <td className="py-3 px-6 font-semibold">Beta</td>
+                      <td className="py-3 px-6">{financialData[0].beta}</td>
+                    </tr>
+                    <tr className="border-b border-accent">
+                      <td className="py-3 px-6 font-semibold">Headquarters</td>
+                      <td className="py-3 px-6">{companyData?.headquarters || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-accent">
+                      <td className="py-3 px-6 font-semibold">Industry</td>
+                      <td className="py-3 px-6">{companyData?.industry || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-accent">
+                      <td className="py-3 px-6 font-semibold">Sector</td>
+                      <td className="py-3 px-6">{companyData?.sector || 'N/A'}</td>
+                    </tr>
+                    <tr className="border-b border-accent">
+                      <td className="py-3 px-6 font-semibold">Earnings Per Share</td>
+                      <td className="py-3 px-6">${financialData[0].earningsPerShare}</td>
+                    </tr>
+                    <tr className="border-b border-accent">
+                      <td className="py-3 px-6 font-semibold">EBITDA</td>
+                      <td className="py-3 px-6">${(financialData[0].ebitda / 1000000000).toFixed(2)}B</td>
+                    </tr>
+                    <tr className="border-b border-accent">
+                      <td className="py-3 px-6 font-semibold">Profit Margin</td>
+                      <td className="py-3 px-6">{(financialData[0].profitMargin * 100).toFixed(2)}%</td>
+                    </tr>
+                    <tr className="border-b border-accent">
+                      <td className="py-3 px-6 font-semibold">Revenue</td>
+                      <td className="py-3 px-6">${(financialData[0].revenue / 1000000000).toFixed(2)}B</td>
+                    </tr>
+                    <tr>
+                      <td className="py-3 px-6 font-semibold">Target Price</td>
+                      <td className="py-3 px-6">${financialData[0].targetPrice}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
        
